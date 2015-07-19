@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:dadl:0.1"
+    xmlns="urn:dadl:0.1" elementFormDefault="qualified">
+
+    <xs:element name="model">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="simpleType" type="SimpleType" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="sequence" type="Sequence" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="choice" type="Choice" minOccurs="0" maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="DadlType" abstract="true">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="adapter" type="xs:NMTOKEN" />
+    </xs:complexType>
+
+    <xs:attributeGroup name="RepresentationAttributes">
+        <xs:attribute name="representation" type="Representation"/>
+        <xs:attribute name="lengthUnit" type="LengthUnit"/>
+        <xs:attribute name="lengthKind" type="LengthKind"/>
+        <xs:attribute name="length" type="xs:int" />
+        <xs:attribute name="outputValueCalc" type="xs:string" />
+    </xs:attributeGroup>
+
+    <xs:complexType name="SimpleType">
+        <xs:complexContent>
+            <xs:extension base="DadlType">
+                <xs:attribute name="contentType" type="ContentType" use="required" />
+                <xs:attribute name="javaType" type="xs:string" use="required" />
+                <xs:attribute name="unsigned" type="xs:boolean" default="false" />
+                <xs:attributeGroup ref="RepresentationAttributes"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:simpleType name="ContentType">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="integer" />
+            <xs:enumeration value="real" />
+            <xs:enumeration value="text" />
+            <xs:enumeration value="calendar" />
+            <xs:enumeration value="opaque" />
+            <xs:enumeration value="boolean" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="LengthKind">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="implicit" />
+            <xs:enumeration value="explicit" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="Representation">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="text" />
+            <xs:enumeration value="binary" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="LengthUnit">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="bit" />
+            <xs:enumeration value="byte" />
+            <xs:enumeration value="char" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="Sequence">
+        <xs:complexContent>
+            <xs:extension base="DadlType">
+                <xs:sequence>
+                    <xs:element name="tag" type="Tag" minOccurs="0" />
+                    <xs:element name="length" type="LengthField" minOccurs="0" />
+                    <xs:element name="element" type="SequenceElement" minOccurs="0"
+                        maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="Element">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+
+    <xs:simpleType name="OccursCountKind">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="fixed" />
+            <xs:enumeration value="expression" />
+            <xs:enumeration value="parsed" />
+            <xs:enumeration value="implicit" />
+            <xs:enumeration value="stopValue" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="SequenceElement">
+        <xs:complexContent>
+            <xs:extension base="Element">
+                <xs:attribute name="minOccurs" type="xs:int" default="1" />
+                <xs:attribute name="maxOccurs" type="xs:int" default="1" />
+                <xs:attribute name="occursCountKind" type="OccursCountKind" default="fixed" />
+                <xs:attribute name="occursCount" type="xs:string" />
+                <xs:attributeGroup ref="RepresentationAttributes"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="Tag">
+        <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="hexValue" type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="LengthField">
+        <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="includesTag" type="xs:boolean" default="false" />
+        <xs:attribute name="includesLengthField" type="xs:boolean" default="false" />
+    </xs:complexType>
+
+
+
+    <xs:complexType name="Choice">
+        <xs:complexContent>
+            <xs:extension base="DadlType">
+                <xs:sequence>
+                    <xs:element name="element" type="Element" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+</xs:schema>

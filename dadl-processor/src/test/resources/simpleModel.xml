@@ -1,0 +1,72 @@
+<model xmlns="urn:dadl:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:dadl:0.1 metamodel.xsd">
+
+
+    <simpleType name="Int8" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="8" lengthUnit="bit" />
+    <simpleType name="UInt8" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="8" lengthUnit="bit" unsigned="true" />
+
+    <simpleType name="Int16" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="16" lengthUnit="bit" />
+    <simpleType name="UInt16" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="16" lengthUnit="bit" unsigned="true" />
+
+    <simpleType name="Int24" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="24" lengthUnit="bit" />
+    <simpleType name="UInt24" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="24" lengthUnit="bit" unsigned="true" />
+
+    <simpleType name="Int32" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="32" lengthUnit="bit" />
+    <simpleType name="UInt32" contentType="integer" javaType="long" representation="binary"
+        lengthKind="explicit" length="32" lengthUnit="bit" unsigned="true" />
+
+    <simpleType name="VarIntLength" contentType="integer" javaType="int" representation="binary"
+        lengthKind="implicit" adapter="varint"/>
+
+    <sequence name="AllNumbers">
+        <element name="shortNumbers" type="ShortNumbers" />
+        <element name="longNumbers" type="LongNumbers" />
+    </sequence>
+
+    <sequence name="ShortNumbers">
+        <element name="i8" type="Int8" />
+        <element name="u8" type="UInt8" />
+        <element name="i16" type="Int16" />
+        <element name="u16" type="UInt16" />
+    </sequence>
+
+    <sequence name="LongNumbers">
+        <element name="i24" type="Int24" />
+        <element name="u24" type="UInt24" />
+        <element name="i32" type="Int32" />
+        <element name="u32" type="UInt32"/>
+    </sequence>
+
+    <sequence name="Option1">
+        <tag type="UInt8" hexValue="0A"/>
+        <length type="VarIntLength"/>
+        <element name="i11" type="Int16" />
+        <element name="i12" type="Int8" />
+    </sequence>
+
+    <sequence name="Option2">
+        <tag type="UInt8" hexValue="0B"/>
+        <length type="VarIntLength"/>
+        <element name="i21" type="Int24" />
+        <element name="i22" type="Int32" />
+    </sequence>
+
+    <choice name="MyChoice">
+        <element name="opt1" type="Option1" />
+        <element name="opt2" type="Option2" />
+    </choice>
+
+    <sequence name="NumberList">
+        <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
+        <element name="items" type="Int32" occursCount="self.numItems"/>
+    </sequence>    
+
+
+</model>
