@@ -40,10 +40,10 @@ import demo.simple.ShortNumbers;
  *
  */
 public class ELProcessorTest {
-    
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-    
+
     @Test
     public void shouldGetScalar() {
         ELProcessor processor = new ELProcessor();
@@ -53,8 +53,8 @@ public class ELProcessorTest {
         String text = (String) processor.getValue("t", String.class);
         assertThat(text, is("Text"));
         assertThat(processor.eval("i"), is(42));
-        
-        
+
+
         ShortNumbers sn = new ShortNumbers();
         sn.setI8(5);
         sn.setU8(200);
@@ -69,12 +69,12 @@ public class ELProcessorTest {
         processor.setVariable("$", "sn.u8");
         processor.setValue("$", 45);
         assertThat(processor.eval("sn.u8"), is(45));
-        
+
         processor.defineBean("snb", sn);
         assertThat(processor.eval("snb.u8"), is(45));
         assertThat(processor.eval("i == 42"), is(true));
     }
-    
+
     @Test
     public void shouldClearValue() {
         ELProcessor processor = new ELProcessor();
@@ -92,7 +92,7 @@ public class ELProcessorTest {
         processor.setValue("t", "Text");
         ELManager manager = processor.getELManager();
         StandardELContext context = manager.getELContext();
-        StandardELContext newContext = new StandardELContext(manager.getExpressionFactory());
+        StandardELContext newContext = new StandardELContext(ELManager.getExpressionFactory());
         manager.setELContext(newContext);
         CompositeELResolver composite = new CompositeELResolver();
         composite.add(context.getELResolver());
@@ -101,9 +101,9 @@ public class ELProcessorTest {
         processor.setValue("n", 99);
         assertThat(processor.eval("n"), is(99));
         manager.setELContext(context);
-        
+
         thrown.expect(PropertyNotFoundException.class);
-        processor.eval("n");        
+        processor.eval("n");
     }
 
     @Test
@@ -120,5 +120,5 @@ public class ELProcessorTest {
         assertThat(processor.eval("up[2]"), is("Level2"));
         levels.remove(0);
         assertThat(processor.eval("up[1]"), is("Level2"));
-    }    
+    }
 }
