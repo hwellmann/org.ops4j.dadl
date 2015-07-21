@@ -30,6 +30,7 @@ import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.LengthField;
+import org.ops4j.dadl.metamodel.gen.LengthKind;
 import org.ops4j.dadl.metamodel.gen.LengthUnit;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
@@ -49,7 +50,7 @@ public class Marshaller {
     private ELProcessor processor;
 
     /**
-     * 
+     *
      */
     public Marshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
@@ -68,23 +69,55 @@ public class Marshaller {
     }
 
     private void marshal(Object info, DadlType type, BitStreamWriter writer) throws IOException {
-        if (writeValueViaAdapter(type, info, writer)) {
+        long startPos = writer.getBitPosition();
+        if (!writeValueViaAdapter(type, info, writer)) {
+            pushStack(info);
+            try {
+                if (type instanceof Sequence) {
+                    marshalSequence(info, (Sequence) type, writer);
+                }
+                else if (type instanceof Choice) {
+                    marshalChoice(info, (Choice) type, writer);
+                }
+                else {
+                    throw new UnmarshalException("cannot marshal type " + type.getClass().getName());
+                }
+            }
+            finally {
+                popStack();
+            }
+        }
+        fillPadding(type, startPos, writer);
+    }
+
+    private void fillPadding(DadlType type, long startPos, BitStreamWriter writer)
+        throws IOException {
+        if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
-        pushStack(info);
-        try {
-            if (type instanceof Sequence) {
-                marshalSequence(info, (Sequence) type, writer);
-            }
-            else if (type instanceof Choice) {
-                marshalChoice(info, (Choice) type, writer);
-            }
-            else {
-                throw new UnmarshalException("cannot marshal type " + type.getClass().getName());
-            }
+        long numBits = type.getLength();
+        if (type.getLengthUnit() == LengthUnit.BYTE) {
+            numBits *= 8;
         }
-        finally {
-            popStack();
+        long actualNumBits = writer.getBitPosition() - startPos;
+        if (actualNumBits == numBits) {
+            return;
+        }
+        if (actualNumBits > numBits) {
+            throw new UnmarshalException("actual length of " + type.getName()
+                + " exceeds explicit length of " + numBits + " bits");
+        }
+        long paddingBits = numBits - actualNumBits;
+        if (paddingBits % 8 != 0) {
+            throw new UnmarshalException("number of padding bits must by divisible by 8");
+        }
+        long paddingBytes = paddingBits / 8;
+        int fillByte = 0;
+        if (type.getFillByte() != null) {
+            fillByte = type.getFillByte();
+        }
+        for (int i = 0; i < paddingBytes; i++) {
+            writer.write(fillByte);
         }
     }
 
@@ -97,7 +130,7 @@ public class Marshaller {
     }
 
     /**
-     * 
+     *
      */
     private void popStack() {
         infoStack.remove(0);
@@ -119,7 +152,7 @@ public class Marshaller {
         if (tag != null) {
             marshalTag(tag, writer);
         }
-        LengthField lengthField = sequence.getLength();
+        LengthField lengthField = sequence.getLengthField();
         if (lengthField == null) {
             marshalSequencePayload(info, sequence, writer);
         }
@@ -206,8 +239,8 @@ public class Marshaller {
         }
     }
 
-    private void marshalSequenceField(Object info, SequenceElement element,
-        BitStreamWriter writer) throws IOException {
+    private void marshalSequenceField(Object info, SequenceElement element, BitStreamWriter writer)
+        throws IOException {
         if (model.isList(element)) {
             marshalSequenceListField(info, element, writer);
         }
@@ -243,8 +276,8 @@ public class Marshaller {
         }
     }
 
-    private void marshalChoiceField(Object fieldInfo, Element element,
-        BitStreamWriter writer) throws IOException {
+    private void marshalChoiceField(Object fieldInfo, Element element, BitStreamWriter writer)
+        throws IOException {
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof SimpleType) {
             marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
@@ -269,7 +302,8 @@ public class Marshaller {
                 marshalIntegerField(calculatedValue, element, type, writer);
                 break;
             default:
-                throw new UnsupportedOperationException("unsupported content type: " + type.getContentType());
+                throw new UnsupportedOperationException("unsupported content type: "
+                    + type.getContentType());
         }
     }
 
@@ -297,8 +331,8 @@ public class Marshaller {
                 writeSimpleValue(type, fieldInfo, writer);
                 break;
             default:
-                throw new UnsupportedOperationException(
-                    "unsupported representation: " + type.getRepresentation());
+                throw new UnsupportedOperationException("unsupported representation: "
+                    + type.getRepresentation());
         }
     }
 

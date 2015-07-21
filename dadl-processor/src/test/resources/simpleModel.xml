@@ -46,14 +46,14 @@
 
     <sequence name="Option1">
         <tag type="UInt8" hexValue="0A"/>
-        <length type="VarIntLength"/>
+        <lengthField type="VarIntLength"/>
         <element name="i11" type="Int16" />
         <element name="i12" type="Int8" />
     </sequence>
 
     <sequence name="Option2">
         <tag type="UInt8" hexValue="0B"/>
-        <length type="VarIntLength"/>
+        <lengthField type="VarIntLength"/>
         <element name="i21" type="Int24" />
         <element name="i22" type="Int32" />
     </sequence>
@@ -68,5 +68,16 @@
         <element name="items" type="Int32" occursCount="self.numItems"/>
     </sequence>    
 
+    <sequence name="PaddedInner" lengthKind="explicit" length="9" fillByte="0" lengthUnit="byte">
+        <element name="a" type="Int16" />
+        <element name="b" type="Int16" />
+    </sequence>    
+
+    <sequence name="PaddedOuter" lengthKind="implicit">
+        <element name="inner" type="PaddedInner" />
+        <element name="c" type="Int16" />
+    </sequence>    
+
+   
 
 </model>

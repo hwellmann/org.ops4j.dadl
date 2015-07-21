@@ -42,6 +42,8 @@ import demo.simple.LongNumbers;
 import demo.simple.MyChoice;
 import demo.simple.NumberList;
 import demo.simple.Option2;
+import demo.simple.PaddedInner;
+import demo.simple.PaddedOuter;
 import demo.simple.ShortNumbers;
 
 
@@ -50,14 +52,14 @@ import demo.simple.ShortNumbers;
  *
  */
 public class AllNumbersTest {
-    
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-    
+
     private DadlContext dadlContext;
-    
+
     @Before
-    public void before() throws JAXBException {     
+    public void before() throws JAXBException {
         dadlContext = DadlContext.newInstance(new File("src/test/resources/simpleModel.xml"));
         dadlContext.setAdapter("varint", new VarIntAdapter());
     }
@@ -85,7 +87,7 @@ public class AllNumbersTest {
         marshaller.marshal(an, os);
         byte[] bytes = os.toByteArray();
         assertThat(bytes.length, is(20));
-        
+
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(bytes);
         assertThat(reader.readByte(), is((byte) 5));
         assertThat(reader.readUnsignedByte(), is(200));
@@ -112,7 +114,7 @@ public class AllNumbersTest {
         writer.close();
         byte[] bytes = writer.toByteArray();
         assertThat(bytes.length, is(20));
-        
+
         Unmarshaller parser = dadlContext.createUnmarshaller();
         AllNumbers an = parser.unmarshal(bytes, AllNumbers.class);
         assertThat(an, is(notNullValue()));
@@ -122,7 +124,7 @@ public class AllNumbersTest {
         assertThat(sn.getU8(), is(200));
         assertThat(sn.getI16(), is(1000));
         assertThat(sn.getU16(), is(50000));
-        
+
         LongNumbers ln = an.getLongNumbers();
         assertThat(ln, is(notNullValue()));
         assertThat(ln.getI24(), is(5_000_000));
@@ -130,7 +132,7 @@ public class AllNumbersTest {
         assertThat(ln.getI32(), is(-100_000));
         assertThat(ln.getU32(), is(3_000_000_000L));
     }
-    
+
     @Test
     public void shouldUnmarshalChoice() throws Exception{
         ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
@@ -143,7 +145,7 @@ public class AllNumbersTest {
         assertThat(bytes.length, is(9));
 
         Unmarshaller parser = dadlContext.createUnmarshaller();
-        
+
         MyChoice choice = parser.unmarshal(bytes, MyChoice.class);
         assertThat(choice, is(notNullValue()));
         assertThat(choice.getOpt1(), is(nullValue()));
@@ -151,7 +153,7 @@ public class AllNumbersTest {
         assertThat(choice.getOpt2().getI21(), is(42));
         assertThat(choice.getOpt2().getI22(), is(12345678));
     }
-    
+
     @Test
     public void shouldMarshalChoice() throws Exception {
         Option2 opt2 = new Option2();
@@ -159,11 +161,11 @@ public class AllNumbersTest {
         opt2.setI22(12345678);
         MyChoice myChoice = new MyChoice();
         myChoice.setOpt2(opt2);
-        
+
         Marshaller marshaller = dadlContext.createMarshaller();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         marshaller.marshal(myChoice, os);
-        
+
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
         assertThat(reader.readUnsignedByte(), is (0x0B));
         assertThat(reader.readUnsignedByte(), is(7));
@@ -171,7 +173,7 @@ public class AllNumbersTest {
         assertThat(reader.readBits(32), is(12345678L));
         reader.close();
     }
-    
+
     @Test
     public void shouldMarshalList() throws Exception {
         NumberList numberList = new NumberList();
@@ -182,7 +184,7 @@ public class AllNumbersTest {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         marshaller.marshal(numberList, os);
         assertThat(os.toByteArray().length, is(13));
-        
+
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
         assertThat(reader.readUnsignedByte(), is(3));
         assertThat(reader.readInt(), is(16));
@@ -190,7 +192,7 @@ public class AllNumbersTest {
         assertThat(reader.readInt(), is(36));
         reader.close();
     }
-    
+
     @Test
     public void shouldUnmarshalList() throws Exception {
         ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
@@ -217,12 +219,34 @@ public class AllNumbersTest {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         marshaller.marshal(numberList, os);
         assertThat(os.toByteArray().length, is(13));
-        
+
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
         assertThat(reader.readUnsignedByte(), is(3));
         assertThat(reader.readInt(), is(16));
         assertThat(reader.readInt(), is(25));
         assertThat(reader.readInt(), is(36));
+        reader.close();
+    }
+
+    @Test
+    public void shouldMarshalWithPadding() throws Exception {
+        PaddedInner inner = new PaddedInner();
+        inner.setA(12);
+        inner.setB(34);
+        PaddedOuter outer = new PaddedOuter();
+        outer.setInner(inner);
+        outer.setC(56);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(outer, os);
+        assertThat(os.toByteArray().length, is(11));
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readShort(), is((short) 12));
+        assertThat(reader.readShort(), is((short) 34));
+        reader.skipBytes(5);
+        assertThat(reader.readShort(), is((short) 56));
         reader.close();
     }
 }

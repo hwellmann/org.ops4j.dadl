@@ -180,7 +180,7 @@ public abstract class BitStreamReader extends ImageInputStreamImpl {
         return result;
     }
 
-    public void skipBits(int bitCnt) throws IOException {
+    public void skipBits(long bitCnt) throws IOException {
         setBitPosition(getBitPosition() + bitCnt);
     }
 

@@ -31,6 +31,7 @@ import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.LengthField;
+import org.ops4j.dadl.metamodel.gen.LengthKind;
 import org.ops4j.dadl.metamodel.gen.LengthUnit;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
@@ -49,9 +50,6 @@ public class Unmarshaller {
     private List<Object> infoStack;
     private ELProcessor processor;
 
-    /**
-     * 
-     */
     public Unmarshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
@@ -70,26 +68,47 @@ public class Unmarshaller {
 
     private <T> T unmarshal(DadlType type, Class<T> klass, BitStreamReader reader)
         throws IOException {
+        long startPos = reader.getBitPosition();
         T info = readValueViaAdapter(type, klass, reader);
-        if (info != null) {
-            return info;
-        }
-        info = newInstance(klass);
-        pushStack(info);
-        try {
-            if (type instanceof Sequence) {
-                return unmarshalSequence(info, (Sequence) type, klass, reader);
+        if (info == null) {
+            info = newInstance(klass);
+            pushStack(info);
+            try {
+                if (type instanceof Sequence) {
+                    info = unmarshalSequence(info, (Sequence) type, klass, reader);
+                }
+                else if (type instanceof Choice) {
+                    info = unmarshalChoice(info, (Choice) type, klass, reader);
+                }
+                else {
+                    throw new UnmarshalException("cannot unmarshal type " + klass.getName());
+                }
             }
-            else if (type instanceof Choice) {
-                return unmarshalChoice(info, (Choice) type, klass, reader);
-            }
-            else {
-                throw new UnmarshalException("cannot unmarshal type " + klass.getName());
+            finally {
+                popStack();
             }
         }
-        finally {
-            popStack();
+        skipPadding(type, startPos, reader);
+        return info;
+    }
+
+    private void skipPadding(DadlType type, long startPos, BitStreamReader reader) throws IOException {
+        if (type.getLengthKind() != LengthKind.EXPLICIT) {
+            return;
         }
+        long numBits = type.getLength();
+        if (type.getLengthUnit() == LengthUnit.BYTE) {
+            numBits *= 8;
+        }
+        long actualNumBits = reader.getBitPosition() - startPos;
+        if (actualNumBits == numBits) {
+            return;
+        }
+        if (actualNumBits > numBits) {
+            throw new UnmarshalException("actual length of " + type.getName() + " exceeds explicit length of " + numBits + " bits");
+        }
+        long paddingBits = numBits - actualNumBits;
+        reader.skipBits(paddingBits);
     }
 
     /**
@@ -101,7 +120,7 @@ public class Unmarshaller {
     }
 
     /**
-     * 
+     *
      */
     private void popStack() {
         infoStack.remove(0);
@@ -121,13 +140,12 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalSequence(T info, Sequence sequence, Class<T> klass,
-        BitStreamReader reader)
-            throws IOException {
+        BitStreamReader reader) throws IOException {
         Tag tag = sequence.getTag();
         if (tag != null) {
             unmarshalTag(tag, reader);
         }
-        LengthField lengthField = sequence.getLength();
+        LengthField lengthField = sequence.getLengthField();
         if (lengthField != null) {
             unmarshalLengthField(lengthField, reader);
         }
@@ -150,8 +168,8 @@ public class Unmarshaller {
             long actualTag = readSimpleValue(simpleType, Long.class, reader);
             long expectedTag = getExpectedValue(tag);
             if (actualTag != expectedTag) {
-                String msg = String.format("tag mismatch: actual = %X, expected = %X",
-                    actualTag, expectedTag);
+                String msg = String.format("tag mismatch: actual = %X, expected = %X", actualTag,
+                    expectedTag);
                 throw new AssertionError(msg);
             }
         }
@@ -291,7 +309,7 @@ public class Unmarshaller {
         }
         return convertLong(value, klass);
     }
-    
+
     @SuppressWarnings("unchecked")
     private <T> T convertLong(long value, Class<T> klass) {
         if (Integer.class.isAssignableFrom(klass)) {
@@ -303,7 +321,7 @@ public class Unmarshaller {
         if (Byte.class.isAssignableFrom(klass)) {
             return (T) Byte.valueOf((byte) value);
         }
-        return (T) (Long) value;       
+        return (T) (Long) value;
     }
 
     private <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)

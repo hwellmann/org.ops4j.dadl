@@ -15,13 +15,14 @@
     <xs:complexType name="DadlType" abstract="true">
         <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
         <xs:attribute name="adapter" type="xs:NMTOKEN" />
+        <xs:attribute name="lengthUnit" type="LengthUnit"/>
+        <xs:attribute name="lengthKind" type="LengthKind"/>
+        <xs:attribute name="length" type="xs:int" />
+        <xs:attribute name="fillByte" type="xs:int" />
     </xs:complexType>
 
     <xs:attributeGroup name="RepresentationAttributes">
         <xs:attribute name="representation" type="Representation"/>
-        <xs:attribute name="lengthUnit" type="LengthUnit"/>
-        <xs:attribute name="lengthKind" type="LengthKind"/>
-        <xs:attribute name="length" type="xs:int" />
         <xs:attribute name="outputValueCalc" type="xs:string" />
     </xs:attributeGroup>
 
@@ -74,7 +75,7 @@
             <xs:extension base="DadlType">
                 <xs:sequence>
                     <xs:element name="tag" type="Tag" minOccurs="0" />
-                    <xs:element name="length" type="LengthField" minOccurs="0" />
+                    <xs:element name="lengthField" type="LengthField" minOccurs="0" />
                     <xs:element name="element" type="SequenceElement" minOccurs="0"
                         maxOccurs="unbounded" />
                 </xs:sequence>
