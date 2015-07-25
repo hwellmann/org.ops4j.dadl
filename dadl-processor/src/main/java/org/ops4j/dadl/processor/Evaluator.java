@@ -75,4 +75,8 @@ public class Evaluator {
     public <T> T evaluate(String expression, Class<T> klass) {
         return (T) processor.getValue(expression, klass);
     }
+
+    public Object evaluate(String expression) {
+        return processor.eval(expression);
+    }
 }

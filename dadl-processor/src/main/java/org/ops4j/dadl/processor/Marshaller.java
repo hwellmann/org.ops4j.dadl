@@ -299,7 +299,7 @@ public class Marshaller {
             SequenceElement seqElem = (SequenceElement) element;
             String expr = seqElem.getOutputValueCalc();
             if (expr != null) {
-                Object value = evaluator.evaluate(expr, Object.class);
+                Object value = evaluator.evaluate(expr);
                 evaluator.setProperty(element.getName(), value);
                 return value;
             }
