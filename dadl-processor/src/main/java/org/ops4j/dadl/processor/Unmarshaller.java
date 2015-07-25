@@ -18,6 +18,7 @@
 package org.ops4j.dadl.processor;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -96,7 +97,7 @@ public class Unmarshaller {
         if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
-        long numBits = type.getLength();
+        int numBits = computeLength(type, processor);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -165,7 +166,7 @@ public class Unmarshaller {
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            long actualTag = readSimpleValue(simpleType, Long.class, reader);
+            long actualTag = readSimpleValue(simpleType, null, Long.class, reader);
             long expectedTag = getExpectedValue(tag);
             if (actualTag != expectedTag) {
                 String msg = String.format("tag mismatch: actual = %X, expected = %X", actualTag,
@@ -183,7 +184,7 @@ public class Unmarshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            return readSimpleValue(simpleType, Long.class, reader);
+            return readSimpleValue(simpleType, null, Long.class, reader);
         }
         throw new UnmarshalException("length field must have simple type");
     }
@@ -240,7 +241,7 @@ public class Unmarshaller {
         BitStreamReader reader) throws IOException {
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof SimpleType) {
-            return readSimpleValue((SimpleType) fieldType, klass, reader);
+            return readSimpleValue((SimpleType) fieldType, element, klass, reader);
         }
         else {
             return unmarshal(fieldType, klass, reader);
@@ -258,7 +259,7 @@ public class Unmarshaller {
 
                 Object fieldValue;
                 if (fieldType instanceof SimpleType) {
-                    fieldValue = readSimpleValue((SimpleType) fieldType, field.getType(), reader);
+                    fieldValue = readSimpleValue((SimpleType) fieldType, element, field.getType(), reader);
                 }
                 else {
                     fieldValue = unmarshal(fieldType, field.getType(), reader);
@@ -290,13 +291,36 @@ public class Unmarshaller {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private <T> T readSimpleValue(SimpleType simpleType, Class<T> klass, BitStreamReader reader)
+    private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass, BitStreamReader reader)
         throws IOException {
         Object info = readValueViaAdapter(simpleType, Object.class, reader);
         if (info != null) {
             return (T) info;
         }
-        int numBits = simpleType.getLength();
+        switch (simpleType.getContentType()) {
+            case INTEGER:
+                return readIntegerValue(simpleType, klass, reader);
+            case TEXT:
+                return (T) readTextValue(simpleType, element, reader);
+            default:
+                throw new UnsupportedOperationException(simpleType.getContentType().toString());
+        }
+    }
+
+
+    private <T> T readIntegerValue(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+        switch (simpleType.getRepresentation()) {
+            case BINARY:
+                return readIntegerValueAsBinary(simpleType, klass, reader);
+            case TEXT:
+                return readIntegerValueAsText(simpleType, klass, reader);
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
+    private <T> T readIntegerValueAsBinary(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+        int numBits = computeLength(simpleType, processor);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -309,6 +333,32 @@ public class Unmarshaller {
         }
         return convertLong(value, klass);
     }
+
+    private <T> T readIntegerValueAsText(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+        return null;
+    }
+
+
+    private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader) throws IOException {
+        if (type.getLengthKind() == LengthKind.EXPLICIT) {
+            long length = computeLength(representation, processor);
+            byte[] bytes = new byte[(int) length];
+            reader.read(bytes);
+            try {
+                return new String(bytes, representation.getEncoding());
+            }
+            catch (UnsupportedEncodingException exc) {
+                throw new UnmarshalException(exc);
+            }
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private int computeLength(DadlType type, ELProcessor elProcessor) {
+        return (Integer) elProcessor.getValue(type.getLength(), Integer.class);
+    }
+
+
 
     @SuppressWarnings("unchecked")
     private <T> T convertLong(long value, Class<T> klass) {

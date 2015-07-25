@@ -25,6 +25,8 @@
     <simpleType name="VarIntLength" contentType="integer" javaType="int" representation="binary"
         lengthKind="implicit" adapter="varint"/>
 
+    <simpleType name="String" contentType="text" javaType="java.lang.String" lengthKind="explicit" representation="text" />
+
     <sequence name="AllNumbers">
         <element name="shortNumbers" type="ShortNumbers" />
         <element name="longNumbers" type="LongNumbers" />
@@ -78,6 +80,9 @@
         <element name="c" type="Int16" />
     </sequence>    
 
-   
+    <sequence name="TextWithLengthField" lengthKind="implicit">
+        <element name="len" type="UInt8" outputValueCalc="self.text.length()"/>
+        <element name="text" type="String" lengthKind="explicit" length="self.len" encoding="UTF-8"/>
+    </sequence>    
 
 </model>

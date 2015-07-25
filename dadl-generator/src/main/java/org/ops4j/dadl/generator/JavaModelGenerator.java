@@ -60,7 +60,7 @@ public class JavaModelGenerator {
     private JPackage pkg;
 
     /**
-     * 
+     *
      */
     public JavaModelGenerator(ValidatedModel model, String packageName, Path outputDir) {
         this.model = model;
@@ -95,7 +95,7 @@ public class JavaModelGenerator {
             }
             else if (type instanceof Choice) {
                 Choice choice = (Choice) type;
-                klass = pkg._class(((Choice) choice).getName());
+                klass = pkg._class(choice.getName());
             }
             if (klass != null) {
                 klass.annotate(Generated.class).
@@ -176,7 +176,7 @@ public class JavaModelGenerator {
         }
         return jtype;
     }
-    
+
     /**
      * @param simpleType
      * @return
@@ -193,8 +193,9 @@ public class JavaModelGenerator {
                 return codeModel.INT;
             case "long":
                 return codeModel.LONG;
+            default:
+                return codeModel.ref(simpleType.getJavaType());
         }
-        throw new IllegalArgumentException("unmapped javaType: " + simpleType.getJavaType());
     }
 
     private String getGetterName(String fieldName) {

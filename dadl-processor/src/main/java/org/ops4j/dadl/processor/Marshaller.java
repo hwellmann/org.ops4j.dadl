@@ -95,7 +95,7 @@ public class Marshaller {
         if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
-        long numBits = type.getLength();
+        long numBits = computeLength(type, processor);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -119,6 +119,10 @@ public class Marshaller {
         for (int i = 0; i < paddingBytes; i++) {
             writer.write(fillByte);
         }
+    }
+
+    private long computeLength(DadlType type, ELProcessor elProcessor) {
+        return (Long) elProcessor.getValue(type.getLength(), Long.class);
     }
 
     /**
@@ -198,12 +202,12 @@ public class Marshaller {
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            int numBits = simpleType.getLength();
+            long numBits = computeLength(simpleType, processor);
             if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
                 numBits *= 8;
             }
             long tagValue = getExpectedValue(tag);
-            writer.writeBits(tagValue, numBits);
+            writer.writeBits(tagValue, (int) numBits);
         }
         else {
             throw new UnmarshalException("tag type is not a simple type: " + typeName);
@@ -359,10 +363,10 @@ public class Marshaller {
             value = ((Number) info).longValue();
         }
 
-        int numBits = type.getLength();
+        long numBits = computeLength(type, processor);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
-        writer.writeBits(value, numBits);
+        writer.writeBits(value, (int) numBits);
     }
 }

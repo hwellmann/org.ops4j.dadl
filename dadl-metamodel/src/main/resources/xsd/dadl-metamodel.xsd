@@ -14,16 +14,23 @@
 
     <xs:complexType name="DadlType" abstract="true">
         <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+        <xs:attribute name="type" type="xs:NMTOKEN" />
         <xs:attribute name="adapter" type="xs:NMTOKEN" />
-        <xs:attribute name="lengthUnit" type="LengthUnit"/>
-        <xs:attribute name="lengthKind" type="LengthKind"/>
-        <xs:attribute name="length" type="xs:int" />
+        <xs:attribute name="lengthUnit" type="LengthUnit" />
+        <xs:attribute name="lengthKind" type="LengthKind" />
+        <xs:attribute name="length" type="xs:string" />
         <xs:attribute name="fillByte" type="xs:int" />
+        <xs:attributeGroup ref="RepresentationAttributes" />
     </xs:complexType>
 
     <xs:attributeGroup name="RepresentationAttributes">
-        <xs:attribute name="representation" type="Representation"/>
+        <xs:attribute name="representation" type="Representation" />
         <xs:attribute name="outputValueCalc" type="xs:string" />
+        <xs:attribute name="textPadKind" type="TextPadKind" />
+        <xs:attribute name="textTrimKind" type="TextTrimKind" />
+        <xs:attribute name="textStringPadCharacter" type="xs:string" />
+        <xs:attribute name="textStringJustification" type="xs:string" />
+        <xs:attribute name="encoding" type="xs:string" />
     </xs:attributeGroup>
 
     <xs:complexType name="SimpleType">
@@ -32,7 +39,6 @@
                 <xs:attribute name="contentType" type="ContentType" use="required" />
                 <xs:attribute name="javaType" type="xs:string" use="required" />
                 <xs:attribute name="unsigned" type="xs:boolean" default="false" />
-                <xs:attributeGroup ref="RepresentationAttributes"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -70,6 +76,20 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="TextPadKind">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none" />
+            <xs:enumeration value="padChar" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TextTrimKind">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none" />
+            <xs:enumeration value="padChar" />
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:complexType name="Sequence">
         <xs:complexContent>
             <xs:extension base="DadlType">
@@ -84,8 +104,27 @@
     </xs:complexType>
 
     <xs:complexType name="Element">
-        <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
-        <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
+        <xs:complexContent>
+            <xs:extension base="DadlType">
+                <xs:sequence>
+                    <xs:element name="tag" type="Tag" minOccurs="0" />
+                    <xs:element name="lengthField" type="LengthField" minOccurs="0" />
+                    <xs:element name="element" type="SequenceElement" minOccurs="0"
+                        maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="SequenceElement">
+        <xs:complexContent>
+            <xs:extension base="Element">
+                <xs:attribute name="minOccurs" type="xs:int" default="1" />
+                <xs:attribute name="maxOccurs" type="xs:int" default="1" />
+                <xs:attribute name="occursCountKind" type="OccursCountKind" default="fixed" />
+                <xs:attribute name="occursCount" type="xs:string" />
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:simpleType name="OccursCountKind">
@@ -98,18 +137,6 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:complexType name="SequenceElement">
-        <xs:complexContent>
-            <xs:extension base="Element">
-                <xs:attribute name="minOccurs" type="xs:int" default="1" />
-                <xs:attribute name="maxOccurs" type="xs:int" default="1" />
-                <xs:attribute name="occursCountKind" type="OccursCountKind" default="fixed" />
-                <xs:attribute name="occursCount" type="xs:string" />
-                <xs:attributeGroup ref="RepresentationAttributes"/>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-
     <xs:complexType name="Tag">
         <xs:attribute name="type" type="xs:NMTOKEN" use="required" />
         <xs:attribute name="hexValue" type="xs:string" />
@@ -120,8 +147,6 @@
         <xs:attribute name="includesTag" type="xs:boolean" default="false" />
         <xs:attribute name="includesLengthField" type="xs:boolean" default="false" />
     </xs:complexType>
-
-
 
     <xs:complexType name="Choice">
         <xs:complexContent>
