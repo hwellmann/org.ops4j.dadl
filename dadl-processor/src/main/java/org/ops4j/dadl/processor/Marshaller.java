@@ -305,6 +305,9 @@ public class Marshaller {
             case INTEGER:
                 marshalIntegerField(calculatedValue, element, type, writer);
                 break;
+            case TEXT:
+                marshalTextField(calculatedValue, element, type, writer);
+                break;
             default:
                 throw new UnsupportedOperationException("unsupported content type: "
                     + type.getContentType());
@@ -322,7 +325,9 @@ public class Marshaller {
             SequenceElement seqElem = (SequenceElement) element;
             String expr = seqElem.getOutputValueCalc();
             if (expr != null) {
-                return processor.eval(expr);
+                Object value = processor.eval(expr);
+                processor.setValue("self." + element.getName(), value);
+                return value;
             }
         }
         return fieldInfo;
@@ -337,6 +342,19 @@ public class Marshaller {
             default:
                 throw new UnsupportedOperationException("unsupported representation: "
                     + type.getRepresentation());
+        }
+    }
+
+    private void marshalTextField(Object fieldInfo, Element element, SimpleType type,
+        BitStreamWriter writer) throws IOException {
+        if (fieldInfo instanceof String) {
+            String text = (String) fieldInfo;
+            long length = computeLength(element, processor);
+            if (length != text.length()) {
+                throw new UnmarshalException("computed text length does not match actual length");
+            }
+            byte[] bytes = text.getBytes(element.getEncoding());
+            writer.write(bytes, 0, bytes.length);
         }
     }
 

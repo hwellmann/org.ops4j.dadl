@@ -20,6 +20,7 @@ package org.ops4j.dadl.processor;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -29,6 +30,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.TextWithLengthField;
@@ -64,6 +66,25 @@ public class StringTest {
         TextWithLengthField text = unmarshaller.unmarshal(writer.toByteArray(), TextWithLengthField.class);
         assertThat(text.getLen(), is(7));
         assertThat(text.getText(), is("Hamburg"));
+    }
 
+    @Test
+    public void shouldMarshalTextWithLengthField() throws IOException {
+        TextWithLengthField text = new TextWithLengthField();
+        text.setText("Hamburg");
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        marshaller.marshal(text, baos);
+
+        byte[] bytes = baos.toByteArray();
+        assertThat(bytes.length, is(8));
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(bytes);
+        assertThat(reader.readUnsignedByte(), is(7));
+        byte[] rawString = new byte[7];
+        reader.readFully(rawString);
+        assertThat(new String(rawString, "UTF-8"), is("Hamburg"));
+        reader.close();
     }
 }
