@@ -21,10 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.el.ELProcessor;
 
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
@@ -48,15 +45,12 @@ public class Unmarshaller {
 
     private DadlContext context;
     private ValidatedModel model;
-    private List<Object> infoStack;
-    private ELProcessor processor;
+    private Evaluator evaluator;
 
     public Unmarshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
-        this.infoStack = new ArrayList<>();
-        this.processor = new ELProcessor();
-        processor.setValue("up", infoStack);
+        this.evaluator = new Evaluator();
     }
 
     public <T> T unmarshal(byte[] bytes, Class<T> klass) throws IOException {
@@ -73,7 +67,7 @@ public class Unmarshaller {
         T info = readValueViaAdapter(type, klass, reader);
         if (info == null) {
             info = newInstance(klass);
-            pushStack(info);
+            evaluator.pushStack(info);
             try {
                 if (type instanceof Sequence) {
                     info = unmarshalSequence(info, (Sequence) type, klass, reader);
@@ -86,7 +80,7 @@ public class Unmarshaller {
                 }
             }
             finally {
-                popStack();
+                evaluator.popStack();
             }
         }
         skipPadding(type, startPos, reader);
@@ -97,7 +91,7 @@ public class Unmarshaller {
         if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
-        int numBits = computeLength(type, processor);
+        int numBits = evaluator.computeLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -110,24 +104,6 @@ public class Unmarshaller {
         }
         long paddingBits = numBits - actualNumBits;
         reader.skipBits(paddingBits);
-    }
-
-    /**
-     * @param info
-     */
-    private void pushStack(Object info) {
-        infoStack.add(0, info);
-        processor.setValue("self", info);
-    }
-
-    /**
-     *
-     */
-    private void popStack() {
-        infoStack.remove(0);
-        if (!infoStack.isEmpty()) {
-            processor.setValue("self", infoStack.get(0));
-        }
     }
 
     private <T> T newInstance(Class<T> klass) {
@@ -209,7 +185,7 @@ public class Unmarshaller {
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
                     reader);
-                processor.setValue("self." + element.getName(), fieldValue);
+                evaluator.setProperty(element.getName(), fieldValue);
                 // checkAssertion(info, field);
             }
         }
@@ -229,8 +205,8 @@ public class Unmarshaller {
     @SuppressWarnings("unchecked")
     private void unmarshalSequenceListField(Object info, Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
-        Long numItems = (Long) processor.getValue(element.getOccursCount(), Long.class);
-        List<Object> list = (List<Object>) processor.eval("self." + element.getName());
+        Long numItems = evaluator.evaluate(element.getOccursCount(), Long.class);
+        List<Object> list = (List<Object>) evaluator.getProperty(element.getName());
         for (long i = 0; i < numItems; i++) {
             Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
             list.add(fieldValue);
@@ -264,7 +240,7 @@ public class Unmarshaller {
                 else {
                     fieldValue = unmarshal(fieldType, field.getType(), reader);
                 }
-                processor.setValue("self." + fieldName, fieldValue);
+                evaluator.setProperty(fieldName, fieldValue);
                 branchMatched = true;
                 break;
             }
@@ -320,7 +296,7 @@ public class Unmarshaller {
     }
 
     private <T> T readIntegerValueAsBinary(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
-        int numBits = computeLength(simpleType, processor);
+        int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -341,7 +317,7 @@ public class Unmarshaller {
 
     private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader) throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = computeLength(representation, processor);
+            long length = evaluator.computeLength(representation);
             byte[] bytes = new byte[(int) length];
             reader.read(bytes);
             try {
@@ -353,12 +329,6 @@ public class Unmarshaller {
         }
         throw new UnsupportedOperationException();
     }
-
-    private int computeLength(DadlType type, ELProcessor elProcessor) {
-        return (Integer) elProcessor.getValue(type.getLength(), Integer.class);
-    }
-
-
 
     @SuppressWarnings("unchecked")
     private <T> T convertLong(long value, Class<T> klass) {

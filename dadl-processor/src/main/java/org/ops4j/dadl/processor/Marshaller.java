@@ -19,7 +19,6 @@ package org.ops4j.dadl.processor;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.el.ELProcessor;
@@ -46,8 +45,7 @@ public class Marshaller {
 
     private DadlContext context;
     private ValidatedModel model;
-    private List<Object> infoStack;
-    private ELProcessor processor;
+    private Evaluator evaluator;
 
     /**
      *
@@ -55,9 +53,7 @@ public class Marshaller {
     public Marshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
-        this.infoStack = new ArrayList<>();
-        this.processor = new ELProcessor();
-        processor.setValue("up", infoStack);
+        this.evaluator = new Evaluator();
     }
 
     public void marshal(Object info, OutputStream os) throws IOException {
@@ -71,7 +67,7 @@ public class Marshaller {
     private void marshal(Object info, DadlType type, BitStreamWriter writer) throws IOException {
         long startPos = writer.getBitPosition();
         if (!writeValueViaAdapter(type, info, writer)) {
-            pushStack(info);
+            evaluator.pushStack(info);
             try {
                 if (type instanceof Sequence) {
                     marshalSequence(info, (Sequence) type, writer);
@@ -84,7 +80,7 @@ public class Marshaller {
                 }
             }
             finally {
-                popStack();
+                evaluator.popStack();
             }
         }
         fillPadding(type, startPos, writer);
@@ -95,7 +91,7 @@ public class Marshaller {
         if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
-        long numBits = computeLength(type, processor);
+        long numBits = evaluator.computeLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -118,28 +114,6 @@ public class Marshaller {
         }
         for (int i = 0; i < paddingBytes; i++) {
             writer.write(fillByte);
-        }
-    }
-
-    private long computeLength(DadlType type, ELProcessor elProcessor) {
-        return (Long) elProcessor.getValue(type.getLength(), Long.class);
-    }
-
-    /**
-     * @param info
-     */
-    private void pushStack(Object info) {
-        infoStack.add(0, info);
-        processor.setValue("self", info);
-    }
-
-    /**
-     *
-     */
-    private void popStack() {
-        infoStack.remove(0);
-        if (!infoStack.isEmpty()) {
-            processor.setValue("self", infoStack.get(0));
         }
     }
 
@@ -202,7 +176,7 @@ public class Marshaller {
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            long numBits = computeLength(simpleType, processor);
+            long numBits = evaluator.computeLength(simpleType);
             if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
                 numBits *= 8;
             }
@@ -249,7 +223,7 @@ public class Marshaller {
             marshalSequenceListField(info, element, writer);
         }
         else {
-            Object fieldInfo = processor.eval("self." + element.getName());
+            Object fieldInfo = evaluator.getProperty(element.getName());
             marshalSequenceIndividualField(fieldInfo, element, writer);
         }
     }
@@ -274,7 +248,7 @@ public class Marshaller {
     @SuppressWarnings("unchecked")
     private void marshalSequenceListField(Object info, SequenceElement element,
         BitStreamWriter writer) throws IOException {
-        List<Object> items = (List<Object>) processor.eval("self." + element.getName());
+        List<Object> items = (List<Object>) evaluator.getProperty(element.getName());
         for (Object item : items) {
             marshalSequenceIndividualField(item, element, writer);
         }
@@ -325,8 +299,8 @@ public class Marshaller {
             SequenceElement seqElem = (SequenceElement) element;
             String expr = seqElem.getOutputValueCalc();
             if (expr != null) {
-                Object value = processor.eval(expr);
-                processor.setValue("self." + element.getName(), value);
+                Object value = evaluator.evaluate(expr, Object.class);
+                evaluator.setProperty(element.getName(), value);
                 return value;
             }
         }
@@ -349,7 +323,7 @@ public class Marshaller {
         BitStreamWriter writer) throws IOException {
         if (fieldInfo instanceof String) {
             String text = (String) fieldInfo;
-            long length = computeLength(element, processor);
+            long length = evaluator.computeLength(element);
             if (length != text.length()) {
                 throw new UnmarshalException("computed text length does not match actual length");
             }
@@ -381,7 +355,7 @@ public class Marshaller {
             value = ((Number) info).longValue();
         }
 
-        long numBits = computeLength(type, processor);
+        long numBits = evaluator.computeLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
