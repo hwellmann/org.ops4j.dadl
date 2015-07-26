@@ -36,12 +36,16 @@ import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.Tag;
 import org.ops4j.dadl.model.ValidatedModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author hwellmann
  *
  */
 public class Marshaller {
+
+    private static Logger log = LoggerFactory.getLogger(Marshaller.class);
 
     private DadlContext context;
     private ValidatedModel model;
@@ -126,6 +130,7 @@ public class Marshaller {
      */
     private void marshalSequence(Object info, Sequence sequence, BitStreamWriter writer)
         throws IOException {
+        log.debug("marshalling sequence {}", sequence.getName());
         Tag tag = sequence.getTag();
         if (tag != null) {
             marshalTag(tag, writer);
@@ -150,6 +155,7 @@ public class Marshaller {
 
     private void marshalChoice(Object info, Choice choice, BitStreamWriter writer)
         throws IOException {
+        log.debug("marshalling choice {}", choice.getType());
         ELProcessor processor = new ELProcessor();
         processor.defineBean("self", info);
         boolean branchMatched = false;
@@ -230,6 +236,7 @@ public class Marshaller {
 
     private void marshalSequenceIndividualField(Object fieldInfo, SequenceElement element,
         BitStreamWriter writer) throws IOException {
+        log.debug("marshalling field {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof SimpleType) {
             marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
@@ -248,14 +255,19 @@ public class Marshaller {
     @SuppressWarnings("unchecked")
     private void marshalSequenceListField(Object info, SequenceElement element,
         BitStreamWriter writer) throws IOException {
+        log.debug("marshalling list field {}", element.getName());
         List<Object> items = (List<Object>) evaluator.getProperty(element.getName());
+        int index = 0;
         for (Object item : items) {
+            log.debug("index {}", index);
             marshalSequenceIndividualField(item, element, writer);
+            index++;
         }
     }
 
     private void marshalChoiceField(Object fieldInfo, Element element, BitStreamWriter writer)
         throws IOException {
+        log.debug("marshalling branch {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof SimpleType) {
             marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
@@ -274,6 +286,7 @@ public class Marshaller {
      */
     private void marshalSimpleField(Object fieldInfo, Element element, SimpleType type,
         BitStreamWriter writer) throws IOException {
+        log.debug("writing simple value of type {}", type.getName());
         Object calculatedValue = calculateValue(fieldInfo, element, type);
         switch (type.getContentType()) {
             case INTEGER:

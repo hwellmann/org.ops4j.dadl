@@ -36,12 +36,16 @@ import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.Tag;
 import org.ops4j.dadl.model.ValidatedModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author hwellmann
  *
  */
 public class Unmarshaller {
+
+    private static Logger log = LoggerFactory.getLogger(Unmarshaller.class);
 
     private DadlContext context;
     private ValidatedModel model;
@@ -118,6 +122,7 @@ public class Unmarshaller {
 
     private <T> T unmarshalSequence(T info, Sequence sequence, Class<T> klass,
         BitStreamReader reader) throws IOException {
+        log.debug("unmarshalling sequence {}", sequence.getName());
         Tag tag = sequence.getTag();
         if (tag != null) {
             unmarshalTag(tag, reader);
@@ -144,6 +149,7 @@ public class Unmarshaller {
             SimpleType simpleType = (SimpleType) type;
             long actualTag = readSimpleValue(simpleType, null, Long.class, reader);
             long expectedTag = getExpectedValue(tag);
+            log.debug("unmarshalling tag {}", expectedTag);
             if (actualTag != expectedTag) {
                 String msg = String.format("tag mismatch: actual = %X, expected = %X", actualTag,
                     expectedTag);
@@ -160,7 +166,9 @@ public class Unmarshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            return readSimpleValue(simpleType, null, Long.class, reader);
+            Long lengthValue = readSimpleValue(simpleType, null, Long.class, reader);
+            log.debug("unmarshalled length field with value {}", lengthValue);
+            return lengthValue;
         }
         throw new UnmarshalException("length field must have simple type");
     }
@@ -175,6 +183,7 @@ public class Unmarshaller {
 
     private void unmarshalSequenceField(Object info, Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
+        log.debug("unmarshalling sequence element {}", element.getName());
         try {
             Field field = klass.getDeclaredField(element.getName());
             if (model.isList(element)) {
@@ -225,8 +234,10 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass, BitStreamReader reader) {
+        log.debug("unmarshalling choice {}", choice.getName());
         boolean branchMatched = false;
         for (Element element : choice.getElement()) {
+            log.debug("trying branch {}", element.getName());
             reader.mark();
             try {
                 String fieldName = element.getName();
@@ -242,6 +253,7 @@ public class Unmarshaller {
                 }
                 evaluator.setProperty(fieldName, fieldValue);
                 branchMatched = true;
+                log.debug("matched branch {}", element.getName());
                 break;
             }
             catch (AssertionError | Exception exc) {
@@ -269,6 +281,7 @@ public class Unmarshaller {
     @SuppressWarnings("unchecked")
     private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass, BitStreamReader reader)
         throws IOException {
+        log.debug("reading simple value of type {}", simpleType.getName());
         Object info = readValueViaAdapter(simpleType, Object.class, reader);
         if (info != null) {
             return (T) info;
