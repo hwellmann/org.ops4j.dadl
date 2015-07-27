@@ -40,6 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A marshaller serializes info model objects to a bit stream using the formatting rules of a given
+ * DADL model.
+ *
  * @author hwellmann
  *
  */
@@ -51,15 +54,22 @@ public class Marshaller {
     private ValidatedModel model;
     private Evaluator evaluator;
 
-    /**
-     *
-     */
-    public Marshaller(DadlContext context, ValidatedModel model) {
+    Marshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
         this.evaluator = new Evaluator();
     }
 
+    /**
+     * Marshals (serializes) the given info model object to the given bit stream.
+     *
+     * @param info
+     *            info model object
+     * @param os
+     *            output stream
+     * @throws IOException
+     *             on write error
+     */
     public void marshal(Object info, OutputStream os) throws IOException {
         String typeName = info.getClass().getSimpleName();
         DadlType type = model.getType(typeName);

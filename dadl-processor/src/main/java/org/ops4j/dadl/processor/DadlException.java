@@ -17,6 +17,12 @@
  */
 package org.ops4j.dadl.processor;
 
+/**
+ * Base class of all DADL exceptions. In most cases, more specific exceptions will be thrown.
+ *
+ * @author Harald Wellmann
+ *
+ */
 public class DadlException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
@@ -29,7 +35,7 @@ public class DadlException extends RuntimeException {
 
     /**
      * Creates an exception with the given message.
-     * 
+     *
      * @param message
      *            exception message
      */
@@ -39,7 +45,7 @@ public class DadlException extends RuntimeException {
 
     /**
      * Creates an exception with the given message and cause.
-     * 
+     *
      * @param message
      *            exception message
      * @param cause
@@ -51,7 +57,7 @@ public class DadlException extends RuntimeException {
 
     /**
      * Creates an exception with the given cause.
-     * 
+     *
      * @param cause
      *            cause of this exception
      */

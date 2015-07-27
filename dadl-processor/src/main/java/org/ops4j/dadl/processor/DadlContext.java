@@ -29,19 +29,31 @@ import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
 
 /**
+ * Entry point for client applications.
+ * <p>
+ * {@link #newInstance(File)} is used to build a DADL context for a given model. This context is
+ * then used to construct marshallers or unmarshallers.
+ *
  * @author hwellmann
  *
  */
 public class DadlContext {
-    
+
     private ValidatedModel model;
-    
+
     private Map<String, DadlAdapter<?>> adapters = new HashMap<>();
-    
+
     protected DadlContext(ValidatedModel model) {
         this.model = model;
     }
-     
+
+    /**
+     * Creates a DADL context for a XML model file.
+     *
+     * @param modelFile
+     *            file containing a XML model satisfying the DADL schema
+     * @return DADL context
+     */
     public static DadlContext newInstance(File modelFile) {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(Model.class);
@@ -55,19 +67,46 @@ public class DadlContext {
             throw new DadlException(exc);
         }
     }
-    
+
+    /**
+     * Sets an adapter with the given name.
+     *
+     * @param name
+     *            adapter name, referenced in the XML model
+     * @param adapter
+     *            adapter implementation
+     */
     public void setAdapter(String name, DadlAdapter<?> adapter) {
         adapters.put(name, adapter);
     }
-    
+
+    /**
+     * Creates an unmarshaller for the current model.
+     *
+     * @return unmarshaller
+     */
     public Unmarshaller createUnmarshaller() {
         return new Unmarshaller(this, model);
     }
 
+    /**
+     * Creates a marshaller for the current model.
+     *
+     * @return marshaller
+     */
     public Marshaller createMarshaller() {
         return new Marshaller(this, model);
     }
-    
+
+    /**
+     * Gets an adapter for the given DADL type and the given Java model class.
+     *
+     * @param type
+     *            DADL type
+     * @param klass
+     *            Java model class
+     * @return adapter, or null if no adapter is defined for this type
+     */
     @SuppressWarnings("unchecked")
     public <T> DadlAdapter<T> getAdapter(DadlType type, Class<T> klass) {
         String adapterName = type.getAdapter();

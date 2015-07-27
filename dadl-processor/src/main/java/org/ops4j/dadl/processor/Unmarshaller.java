@@ -40,6 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * An unmarshaller deserializes info model objects from a bit stream using the formatting rules of a
+ * given DADL model.
+ *
  * @author hwellmann
  *
  */
@@ -51,12 +54,24 @@ public class Unmarshaller {
     private ValidatedModel model;
     private Evaluator evaluator;
 
-    public Unmarshaller(DadlContext context, ValidatedModel model) {
+    Unmarshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
         this.evaluator = new Evaluator();
     }
 
+    /**
+     * Unmarshals the given byte array into an info model object of the given class. The class must
+     * be mapped to a type in the current DADL model.
+     *
+     * @param bytes
+     *            byte array
+     * @param klass
+     *            info model class
+     * @return instance of model class
+     * @throws IOException
+     *             on read error
+     */
     public <T> T unmarshal(byte[] bytes, Class<T> klass) throws IOException {
         String typeName = klass.getSimpleName();
         DadlType type = model.getType(typeName);
@@ -91,7 +106,8 @@ public class Unmarshaller {
         return info;
     }
 
-    private void skipPadding(DadlType type, long startPos, BitStreamReader reader) throws IOException {
+    private void skipPadding(DadlType type, long startPos, BitStreamReader reader)
+        throws IOException {
         if (type.getLengthKind() != LengthKind.EXPLICIT) {
             return;
         }
@@ -104,7 +120,8 @@ public class Unmarshaller {
             return;
         }
         if (actualNumBits > numBits) {
-            throw new UnmarshalException("actual length of " + type.getName() + " exceeds explicit length of " + numBits + " bits");
+            throw new UnmarshalException("actual length of " + type.getName()
+                + " exceeds explicit length of " + numBits + " bits");
         }
         long paddingBits = numBits - actualNumBits;
         reader.skipBits(paddingBits);
@@ -246,7 +263,8 @@ public class Unmarshaller {
 
                 Object fieldValue;
                 if (fieldType instanceof SimpleType) {
-                    fieldValue = readSimpleValue((SimpleType) fieldType, element, field.getType(), reader);
+                    fieldValue = readSimpleValue((SimpleType) fieldType, element, field.getType(),
+                        reader);
                 }
                 else {
                     fieldValue = unmarshal(fieldType, field.getType(), reader);
@@ -279,8 +297,8 @@ public class Unmarshaller {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass, BitStreamReader reader)
-        throws IOException {
+    private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass,
+        BitStreamReader reader) throws IOException {
         log.debug("reading simple value of type {}", simpleType.getName());
         Object info = readValueViaAdapter(simpleType, Object.class, reader);
         if (info != null) {
@@ -296,8 +314,8 @@ public class Unmarshaller {
         }
     }
 
-
-    private <T> T readIntegerValue(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+    private <T> T readIntegerValue(SimpleType simpleType, Class<T> klass, BitStreamReader reader)
+        throws IOException {
         switch (simpleType.getRepresentation()) {
             case BINARY:
                 return readIntegerValueAsBinary(simpleType, klass, reader);
@@ -308,7 +326,8 @@ public class Unmarshaller {
         }
     }
 
-    private <T> T readIntegerValueAsBinary(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+    private <T> T readIntegerValueAsBinary(SimpleType simpleType, Class<T> klass,
+        BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
@@ -323,12 +342,13 @@ public class Unmarshaller {
         return convertLong(value, klass);
     }
 
-    private <T> T readIntegerValueAsText(SimpleType simpleType, Class<T> klass, BitStreamReader reader) throws IOException {
+    private <T> T readIntegerValueAsText(SimpleType simpleType, Class<T> klass,
+        BitStreamReader reader) throws IOException {
         return null;
     }
 
-
-    private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader) throws IOException {
+    private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader)
+        throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);
             byte[] bytes = new byte[(int) length];

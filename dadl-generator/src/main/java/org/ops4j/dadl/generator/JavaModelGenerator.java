@@ -48,6 +48,9 @@ import com.sun.codemodel.JVar;
 import com.sun.codemodel.writer.FileCodeWriter;
 
 /**
+ * Generates Java source files from a given model. The will be one POJO for each complex type. The
+ * source will be output when the {@link #generateJavaModel()} method is called.
+ *
  * @author hwellmann
  *
  */
@@ -60,7 +63,18 @@ public class JavaModelGenerator {
     private JPackage pkg;
 
     /**
+     * Generates Java sources from a given validated model. The classes will be written to a
+     * subdirectory given output root directory, corresponding to the package name, when the
+     * {@link #generateJavaModel()} method is called. E.g. for output directory {@target} and
+     * package name {@code com.example.foo}, the generated files will be written to
+     * {@code target/com/example/foo}. Any required directories will be created if needed.
      *
+     * @param model
+     *            validated model
+     * @param packageName
+     *            fully qualified package name for all generated classes
+     * @param outputDir
+     *            output root directory for the generated classes.
      */
     public JavaModelGenerator(ValidatedModel model, String packageName, Path outputDir) {
         this.model = model;
@@ -68,6 +82,11 @@ public class JavaModelGenerator {
         this.outputDir = outputDir;
     }
 
+    /**
+     * Generates the Java model classes.
+     *
+     * @throws IOException on write error
+     */
     public void generateJavaModel() throws IOException {
         codeModel = new JCodeModel();
         pkg = codeModel._package(packageName);
@@ -98,9 +117,8 @@ public class JavaModelGenerator {
                 klass = pkg._class(choice.getName());
             }
             if (klass != null) {
-                klass.annotate(Generated.class).
-                    param("value", getClass().getName()).
-                    param("date", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
+                klass.annotate(Generated.class).param("value", getClass().getName())
+                    .param("date", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
             }
         }
         catch (JClassAlreadyExistsException exc) {
@@ -142,8 +160,8 @@ public class JavaModelGenerator {
         JFieldVar field = klass.field(JMod.PRIVATE, listType, fieldName);
 
         JMethod getter = klass.method(JMod.PUBLIC, listType, getGetterName(fieldName));
-        getter.body()._if(field.eq(JExpr._null())).
-            _then().assign(field, JExpr._new(codeModel.ref(ArrayList.class).narrow(elementType)));
+        getter.body()._if(field.eq(JExpr._null()))._then()
+            .assign(field, JExpr._new(codeModel.ref(ArrayList.class).narrow(elementType)));
         getter.body()._return(field);
     }
 

@@ -23,11 +23,38 @@ import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 
 /**
+ * An adapter for overriding the default (un)marshalling of a given type.
+ * <p>
+ * Users should implement this interface for any type with non-standard encoding, e.g. to map a
+ * complex type to a simple type in a special way.
+ *
+ * @param <T>
+ *            information model type
+ *
  * @author hwellmann
  *
  */
 public interface DadlAdapter<T> {
 
+    /**
+     * Marshals the given info model to the given writer.
+     *
+     * @param info
+     *            information model
+     * @param writer
+     *            bit stream writer
+     * @throws IOException
+     *             on write error
+     */
     void marshal(T info, BitStreamWriter writer) throws IOException;
+
+    /**
+     * Marshals an object of the info model type from the given reader.
+     *
+     * @param reader
+     *            bit stream reader
+     * @throws IOException
+     *             on read error
+     */
     T unmarshal(BitStreamReader reader) throws IOException;
 }
