@@ -119,7 +119,7 @@ public class Marshaller {
         }
         long paddingBits = numBits - actualNumBits;
         if (paddingBits % 8 != 0) {
-            throw new UnmarshalException("number of padding bits must by divisible by 8");
+            throw new UnmarshalException("number of padding bits must be divisible by 8");
         }
         long paddingBytes = paddingBits / 8;
         int fillByte = 0;
