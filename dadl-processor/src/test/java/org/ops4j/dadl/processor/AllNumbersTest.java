@@ -44,6 +44,7 @@ import demo.simple.NumberList;
 import demo.simple.Option2;
 import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
+import demo.simple.ParsedNumberList;
 import demo.simple.ShortNumbers;
 
 
@@ -248,5 +249,21 @@ public class AllNumbersTest {
         reader.skipBytes(5);
         assertThat(reader.readShort(), is((short) 56));
         reader.close();
+    }
+
+    @Test
+    public void shouldUnmarshalParsedArray() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeInt(16);
+        writer.writeInt(25);
+        writer.writeInt(36);
+        writer.writeInt(49);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(16));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        ParsedNumberList numberList = unmarshaller.unmarshal(writer.toByteArray(), ParsedNumberList.class);
+        assertThat(numberList.getItems(), contains(16, 25, 36, 49));
     }
 }

@@ -190,10 +190,6 @@ public class Unmarshaller {
         throw new UnmarshalException("length field must have simple type");
     }
 
-    /**
-     * @param tag
-     * @return
-     */
     private long getExpectedValue(Tag tag) {
         return Long.parseUnsignedLong(tag.getHexValue(), 16);
     }
@@ -221,21 +217,50 @@ public class Unmarshaller {
         }
     }
 
-    /**
-     * @param info
-     * @param klass
-     * @param element
-     * @param reader
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
     private void unmarshalSequenceListField(Object info, Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
+        switch (element.getOccursCountKind()) {
+            case EXPRESSION:
+                unmarshalSequenceListFieldByExpression(info, klass, element, reader);
+                break;
+            case PARSED:
+                unmarshalSequenceListFieldParsed(info, klass, element, reader);
+                break;
+            default:
+                throw new UnsupportedOperationException(element.getOccursCountKind().toString());
+
+        }
+    }
+
+    private void unmarshalSequenceListFieldByExpression(Object info, Class<?> klass, SequenceElement element,
+        BitStreamReader reader) throws IOException {
         Long numItems = evaluator.evaluate(element.getOccursCount(), Long.class);
+
+        @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>) evaluator.getProperty(element.getName());
+
         for (long i = 0; i < numItems; i++) {
             Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
             list.add(fieldValue);
+        }
+    }
+
+    private void unmarshalSequenceListFieldParsed(Object info, Class<?> klass, SequenceElement element,
+        BitStreamReader reader) throws IOException {
+
+        @SuppressWarnings("unchecked")
+        List<Object> list = (List<Object>) evaluator.getProperty(element.getName());
+
+        while (true) {
+            try {
+                reader.mark();
+                Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
+                list.add(fieldValue);
+            }
+            catch (AssertionError | Exception exc) {
+                reader.reset();
+                break;
+            }
         }
     }
 
@@ -290,12 +315,6 @@ public class Unmarshaller {
         return info;
     }
 
-    /**
-     * @param simpleType
-     * @param reader
-     * @return
-     * @throws IOException
-     */
     @SuppressWarnings("unchecked")
     private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass,
         BitStreamReader reader) throws IOException {

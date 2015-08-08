@@ -67,7 +67,11 @@
 
     <sequence name="NumberList">
         <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
-        <element name="items" type="Int32" occursCount="self.numItems"/>
+        <element name="items" type="Int32" occursCountKind="expression" occursCount="self.numItems"/>
+    </sequence>    
+
+    <sequence name="ParsedNumberList">
+        <element name="items" type="Int32" occursCountKind="parsed" maxOccurs="100"/>
     </sequence>    
 
     <sequence name="PaddedInner" lengthKind="explicit" length="9" fillByte="0" lengthUnit="byte">
