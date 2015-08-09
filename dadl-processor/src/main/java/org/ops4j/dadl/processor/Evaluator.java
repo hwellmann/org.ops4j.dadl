@@ -27,7 +27,7 @@ import org.ops4j.dadl.metamodel.gen.Tag;
 
 /**
  * Wraps an Expression Language processor and maintains a stack of Java model objects. The stack
- * corrsponds to the current hierarchy of types and instances processed by a DADL processor.
+ * corresponds to the current hierarchy of types and instances processed by a DADL processor.
  * <p>
  * The current object is stored in a variable named {@code self}. The list of parent objects of the
  * current object is stored in a list variable named {@code up} such that {@code up[0]} is
@@ -49,6 +49,7 @@ public class Evaluator {
         this.infoStack = new ArrayList<>();
         this.processor = new ELProcessor();
         processor.setValue("up", infoStack);
+        pushStack();
     }
 
     /**
@@ -60,6 +61,19 @@ public class Evaluator {
      */
     public void pushStack(Object info) {
         infoStack.add(0, info);
+        processor.setValue("self", info);
+    }
+
+    /**
+     * Pushes the stack, leaving the top element {@code self} undefined.
+     */
+    public void pushStack() {
+        infoStack.add(0, null);
+        processor.setValue("self", null);
+    }
+
+    public void setSelf(Object info) {
+        infoStack.set(0, info);
         processor.setValue("self", info);
     }
 
@@ -100,26 +114,26 @@ public class Evaluator {
     }
 
     /**
-     * Sets the property with the given name of the current object to the given value.
+     * Sets the property with the given name of the current object's parent to the given value.
      *
      * @param propertyName
      *            property name
      * @param value
      *            value to be set
      */
-    public void setProperty(String propertyName, Object value) {
-        processor.setValue("self." + propertyName, value);
+    public void setParentProperty(String propertyName, Object value) {
+        processor.setValue("up[1]." + propertyName, value);
     }
 
     /**
-     * Gets the property with the given name of the current object.
+     * Gets the property with the given name of the current object's parent.
      *
      * @param propertyName
      *            property name
      * @return property value
      */
-    public Object getProperty(String propertyName) {
-        return processor.eval("self." + propertyName);
+    public Object getParentProperty(String propertyName) {
+        return processor.eval("up[1]." + propertyName);
     }
 
     /**
@@ -145,5 +159,10 @@ public class Evaluator {
      */
     public Object evaluate(String expression) {
         return processor.eval(expression);
+    }
+
+    @Override
+    public String toString() {
+        return infoStack.toString();
     }
 }

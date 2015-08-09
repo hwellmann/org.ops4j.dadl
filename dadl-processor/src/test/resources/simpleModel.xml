@@ -76,8 +76,8 @@
     </sequence>
 
     <sequence name="NumberList">
-        <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
-        <element name="items" type="Int32" occursCountKind="expression" occursCount="self.numItems"/>
+        <element name="numItems" type="UInt8" outputValueCalc="up[1].items.size()"/>
+        <element name="items" type="Int32" occursCountKind="expression" occursCount="up[1].numItems"/>
     </sequence>    
 
     <sequence name="ParsedNumberList">
@@ -95,8 +95,8 @@
     </sequence>    
 
     <sequence name="TextWithLengthField" lengthKind="implicit">
-        <element name="len" type="UInt8" outputValueCalc="self.text.length()"/>
-        <element name="text" type="String" lengthKind="explicit" length="self.len" encoding="UTF-8"/>
+        <element name="len" type="UInt8" outputValueCalc="up[1].text.length()"/>
+        <element name="text" type="String" lengthKind="explicit" length="up[1].len" encoding="UTF-8"/>
     </sequence>    
 
     <choice name="MyChoice">

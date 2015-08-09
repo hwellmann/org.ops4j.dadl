@@ -79,22 +79,17 @@ public class Marshaller {
     }
 
     private void marshal(Object info, DadlType type, BitStreamWriter writer) throws IOException {
+        evaluator.setSelf(info);
         long startPos = writer.getBitPosition();
         if (!writeValueViaAdapter(type, info, writer)) {
-            evaluator.pushStack(info);
-            try {
-                if (type instanceof Sequence) {
-                    marshalSequence(info, (Sequence) type, writer);
-                }
-                else if (type instanceof Choice) {
-                    marshalChoice(info, (Choice) type, writer);
-                }
-                else {
-                    throw new UnmarshalException("cannot marshal type " + type.getClass().getName());
-                }
+            if (type instanceof Sequence) {
+                marshalSequence(info, (Sequence) type, writer);
             }
-            finally {
-                evaluator.popStack();
+            else if (type instanceof Choice) {
+                marshalChoice(info, (Choice) type, writer);
+            }
+            else {
+                throw new UnmarshalException("cannot marshal type " + type.getClass().getName());
             }
         }
         fillPadding(type, startPos, writer);
@@ -141,6 +136,8 @@ public class Marshaller {
     private void marshalSequence(Object info, Sequence sequence, BitStreamWriter writer)
         throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
+        evaluator.pushStack();
+        try {
         Tag tag = sequence.getTag();
         if (tag != null) {
             marshalTag(tag, writer);
@@ -161,24 +158,34 @@ public class Marshaller {
                 throw new UnsupportedOperationException("payload bitoffset != 0 is not supported");
             }
         }
+        }
+        finally {
+            evaluator.popStack();
+        }
     }
 
     private void marshalChoice(Object info, Choice choice, BitStreamWriter writer)
         throws IOException {
         log.debug("marshalling choice {}", choice.getType());
-        ELProcessor processor = new ELProcessor();
-        processor.defineBean("self", info);
-        boolean branchMatched = false;
-        for (Element element : choice.getElement()) {
-            Object fieldInfo = processor.eval("self." + element.getName());
-            if (fieldInfo != null) {
-                marshalChoiceField(fieldInfo, element, writer);
-                branchMatched = true;
-                break;
+        evaluator.pushStack();
+        try {
+            ELProcessor processor = new ELProcessor();
+            processor.defineBean("self", info);
+            boolean branchMatched = false;
+            for (Element element : choice.getElement()) {
+                Object fieldInfo = processor.eval("self." + element.getName());
+                if (fieldInfo != null) {
+                    marshalChoiceField(fieldInfo, element, writer);
+                    branchMatched = true;
+                    break;
+                }
+            }
+            if (!branchMatched) {
+                throw new MarshalException("all branches empty in choice: " + info);
             }
         }
-        if (!branchMatched) {
-            throw new MarshalException("all branches empty in choice: " + info);
+        finally {
+            evaluator.popStack();
         }
     }
 
@@ -239,7 +246,7 @@ public class Marshaller {
             marshalSequenceListField(info, element, writer);
         }
         else {
-            Object fieldInfo = evaluator.getProperty(element.getName());
+            Object fieldInfo = evaluator.getParentProperty(element.getName());
             marshalSequenceIndividualField(fieldInfo, element, writer);
         }
     }
@@ -266,7 +273,7 @@ public class Marshaller {
     private void marshalSequenceListField(Object info, SequenceElement element,
         BitStreamWriter writer) throws IOException {
         log.debug("marshalling list field {}", element.getName());
-        List<Object> items = (List<Object>) evaluator.getProperty(element.getName());
+        List<Object> items = (List<Object>) evaluator.getParentProperty(element.getName());
         int index = 0;
         for (Object item : items) {
             log.debug("index {}", index);
@@ -323,7 +330,7 @@ public class Marshaller {
             String expr = seqElem.getOutputValueCalc();
             if (expr != null) {
                 Object value = evaluator.evaluate(expr);
-                evaluator.setProperty(element.getName(), value);
+                evaluator.setParentProperty(element.getName(), value);
                 return value;
             }
         }
@@ -370,6 +377,7 @@ public class Marshaller {
 
     private void writeSimpleValue(SimpleType type, Object info, BitStreamWriter writer)
         throws IOException {
+        evaluator.setSelf(info);
         if (writeValueViaAdapter(type, info, writer)) {
             return;
         }

@@ -88,20 +88,15 @@ public class Unmarshaller {
         T info = readValueViaAdapter(type, klass, reader);
         if (info == null) {
             info = newInstance(klass);
-            evaluator.pushStack(info);
-            try {
-                if (type instanceof Sequence) {
-                    info = unmarshalSequence(info, (Sequence) type, klass, reader);
-                }
-                else if (type instanceof Choice) {
-                    info = unmarshalChoice(info, (Choice) type, klass, reader);
-                }
-                else {
-                    throw new UnmarshalException("cannot unmarshal type " + klass.getName());
-                }
+            evaluator.setSelf(info);
+            if (type instanceof Sequence) {
+                info = unmarshalSequence(info, (Sequence) type, klass, reader);
             }
-            finally {
-                evaluator.popStack();
+            else if (type instanceof Choice) {
+                info = unmarshalChoice(info, (Choice) type, klass, reader);
+            }
+            else {
+                throw new UnmarshalException("cannot unmarshal type " + klass.getName());
             }
         }
         skipPadding(type, startPos, reader);
@@ -142,16 +137,22 @@ public class Unmarshaller {
     private <T> T unmarshalSequence(T info, Sequence sequence, Class<T> klass,
         BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence {}", sequence.getName());
-        Tag tag = sequence.getTag();
-        if (tag != null) {
-            unmarshalTag(tag, reader);
+        evaluator.pushStack();
+        try {
+            Tag tag = sequence.getTag();
+            if (tag != null) {
+                unmarshalTag(tag, reader);
+            }
+            LengthField lengthField = sequence.getLengthField();
+            if (lengthField != null) {
+                unmarshalLengthField(lengthField, reader);
+            }
+            for (SequenceElement element : sequence.getElement()) {
+                unmarshalSequenceField(info, klass, element, reader);
+            }
         }
-        LengthField lengthField = sequence.getLengthField();
-        if (lengthField != null) {
-            unmarshalLengthField(lengthField, reader);
-        }
-        for (SequenceElement element : sequence.getElement()) {
-            unmarshalSequenceField(info, klass, element, reader);
+        finally {
+            evaluator.popStack();
         }
         return info;
     }
@@ -209,8 +210,7 @@ public class Unmarshaller {
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
                     reader);
-                evaluator.setProperty(element.getName(), fieldValue);
-                // checkAssertion(info, field);
+                evaluator.setParentProperty(element.getName(), fieldValue);
             }
         }
         catch (NoSuchFieldException | SecurityException exc) {
@@ -239,7 +239,7 @@ public class Unmarshaller {
         Long numItems = evaluator.evaluate(element.getOccursCount(), Long.class);
 
         @SuppressWarnings("unchecked")
-        List<Object> list = (List<Object>) evaluator.getProperty(element.getName());
+        List<Object> list = (List<Object>) evaluator.getParentProperty(element.getName());
 
         for (long i = 0; i < numItems; i++) {
             Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
@@ -251,7 +251,7 @@ public class Unmarshaller {
         BitStreamReader reader) throws IOException {
 
         @SuppressWarnings("unchecked")
-        List<Object> list = (List<Object>) evaluator.getProperty(element.getName());
+        List<Object> list = (List<Object>) evaluator.getParentProperty(element.getName());
 
         while (true) {
             try {
@@ -280,41 +280,48 @@ public class Unmarshaller {
     private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass, BitStreamReader reader) {
         log.debug("unmarshalling choice {}", choice.getName());
         boolean branchMatched = false;
-        for (Element element : choice.getElement()) {
-            log.debug("trying branch {}", element.getName());
-            reader.mark();
-            try {
-                String fieldName = element.getName();
-                Field field = klass.getDeclaredField(fieldName);
-                DadlType fieldType = model.getType(element.getType());
-
-                Object fieldValue;
-                if (fieldType instanceof SimpleType) {
-                    fieldValue = readSimpleValue((SimpleType) fieldType, element, field.getType(),
-                        reader);
-                }
-                else {
-                    fieldValue = unmarshal(fieldType, field.getType(), reader);
-                }
-                evaluator.setProperty(fieldName, fieldValue);
-                branchMatched = true;
-                log.debug("matched branch {}", element.getName());
-                break;
-            }
-            catch (AssertionError | Exception exc) {
+        evaluator.pushStack();
+        try {
+            for (Element element : choice.getElement()) {
+                log.debug("trying branch {}", element.getName());
+                reader.mark();
                 try {
-                    reader.reset();
+                    String fieldName = element.getName();
+                    Field field = klass.getDeclaredField(fieldName);
+                    DadlType fieldType = model.getType(element.getType());
+
+                    Object fieldValue;
+                    if (fieldType instanceof SimpleType) {
+                        fieldValue = readSimpleValue((SimpleType) fieldType, element,
+                            field.getType(),
+                            reader);
+                    }
+                    else {
+                        fieldValue = unmarshal(fieldType, field.getType(), reader);
+                    }
+                    evaluator.setParentProperty(fieldName, fieldValue);
+                    branchMatched = true;
+                    log.debug("matched branch {}", element.getName());
+                    break;
                 }
-                catch (IOException exc1) {
-                    // TODO Auto-generated catch block
-                    exc1.printStackTrace();
+                catch (AssertionError | Exception exc) {
+                    try {
+                        reader.reset();
+                    }
+                    catch (IOException exc1) {
+                        // TODO Auto-generated catch block
+                        exc1.printStackTrace();
+                    }
                 }
             }
+            if (!branchMatched) {
+                throw new UnmarshalException("no branch matched on " + klass.getName());
+            }
+            return info;
         }
-        if (!branchMatched) {
-            throw new UnmarshalException("no branch matched on " + klass.getName());
+        finally {
+            evaluator.popStack();
         }
-        return info;
     }
 
     @SuppressWarnings("unchecked")
@@ -325,19 +332,19 @@ public class Unmarshaller {
         if (info != null) {
             return (T) info;
         }
-        Object value = null;
         switch (simpleType.getContentType()) {
             case INTEGER:
-                value = readIntegerValue(simpleType, klass, reader);
+                info = readIntegerValue(simpleType, klass, reader);
                 break;
             case TEXT:
-                value = readTextValue(simpleType, element, reader);
+                info = readTextValue(simpleType, element, reader);
                 break;
             default:
                 throw new UnsupportedOperationException(simpleType.getContentType().toString());
         }
-        checkDiscriminator(value, element);
-        return (T) value;
+        evaluator.setSelf(info);
+        checkDiscriminator(info, element);
+        return (T) info;
     }
 
     private void checkDiscriminator(Object value, DadlType type) {
@@ -351,20 +358,14 @@ public class Unmarshaller {
         if (discriminator.getTestKind() == TestKind.PATTERN) {
             throw new UnsupportedOperationException(discriminator.getTestKind().toString());
         }
-        evaluator.pushStack(value);
-        try {
-            boolean satisfied = evaluator.evaluate(discriminator.getTest(), Boolean.class);
-            if (!satisfied) {
-                String msg = discriminator.getMessage();
-                if (msg == null) {
-                    msg = String.format("%s not satisfied on %s",
-                        discriminator.getTest(), type.getName());
-                }
-                throw new AssertionError(msg);
+        String test = discriminator.getTest();
+        boolean satisfied = evaluator.evaluate(test, Boolean.class);
+        if (!satisfied) {
+            String msg = discriminator.getMessage();
+            if (msg == null) {
+                msg = String.format("%s not satisfied on %s", test, type.getName());
             }
-        }
-        finally {
-            evaluator.popStack();
+            throw new AssertionError(msg);
         }
     }
 
