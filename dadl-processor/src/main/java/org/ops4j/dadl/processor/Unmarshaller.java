@@ -27,6 +27,7 @@ import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
+import org.ops4j.dadl.metamodel.gen.Discriminator;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.LengthField;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
@@ -35,6 +36,7 @@ import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.Tag;
+import org.ops4j.dadl.metamodel.gen.TestKind;
 import org.ops4j.dadl.model.ValidatedModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -323,13 +325,46 @@ public class Unmarshaller {
         if (info != null) {
             return (T) info;
         }
+        Object value = null;
         switch (simpleType.getContentType()) {
             case INTEGER:
-                return readIntegerValue(simpleType, klass, reader);
+                value = readIntegerValue(simpleType, klass, reader);
+                break;
             case TEXT:
-                return (T) readTextValue(simpleType, element, reader);
+                value = readTextValue(simpleType, element, reader);
+                break;
             default:
                 throw new UnsupportedOperationException(simpleType.getContentType().toString());
+        }
+        checkDiscriminator(value, element);
+        return (T) value;
+    }
+
+    private void checkDiscriminator(Object value, DadlType type) {
+        if (type == null) {
+            return;
+        }
+        Discriminator discriminator = type.getDiscriminator();
+        if (discriminator == null) {
+            return;
+        }
+        if (discriminator.getTestKind() == TestKind.PATTERN) {
+            throw new UnsupportedOperationException(discriminator.getTestKind().toString());
+        }
+        evaluator.pushStack(value);
+        try {
+            boolean satisfied = evaluator.evaluate(discriminator.getTest(), Boolean.class);
+            if (!satisfied) {
+                String msg = discriminator.getMessage();
+                if (msg == null) {
+                    msg = String.format("%s not satisfied on %s",
+                        discriminator.getTest(), type.getName());
+                }
+                throw new AssertionError(msg);
+            }
+        }
+        finally {
+            evaluator.popStack();
         }
     }
 

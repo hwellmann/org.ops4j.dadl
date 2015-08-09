@@ -38,6 +38,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.AllNumbers;
+import demo.simple.ChoiceWithDiscriminator;
 import demo.simple.LongNumbers;
 import demo.simple.MyChoice;
 import demo.simple.NumberList;
@@ -265,5 +266,25 @@ public class AllNumbersTest {
         Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
         ParsedNumberList numberList = unmarshaller.unmarshal(writer.toByteArray(), ParsedNumberList.class);
         assertThat(numberList.getItems(), contains(16, 25, 36, 49));
+    }
+
+    @Test
+    public void shouldUnmarshalChoiceWithDiscriminator() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeBits(40, 8);
+        writer.writeBits(42, 24);
+        writer.writeBits(12345678, 32);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(8));
+
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+
+        ChoiceWithDiscriminator choice = parser.unmarshal(bytes, ChoiceWithDiscriminator.class);
+        assertThat(choice, is(notNullValue()));
+        assertThat(choice.getOpt3(), is(nullValue()));
+        assertThat(choice.getOpt4(), is(notNullValue()));
+        assertThat(choice.getOpt4().getI41(), is(42));
+        assertThat(choice.getOpt4().getI42(), is(12345678));
     }
 }

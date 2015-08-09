@@ -59,6 +59,22 @@
         <element name="i22" type="Int32" />
     </sequence>
 
+    <sequence name="Option3">
+        <element name="tag" type="UInt8">
+            <discriminator test="self eq 30"/>
+        </element>
+        <element name="i31" type="Int16" />
+        <element name="i32" type="Int8" />
+    </sequence>
+
+    <sequence name="Option4">
+        <element name="tag" type="UInt8">
+            <discriminator test="self eq 40"/>
+        </element>
+        <element name="i41" type="Int24" />
+        <element name="i42" type="Int32" />
+    </sequence>
+
     <sequence name="NumberList">
         <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
         <element name="items" type="Int32" occursCountKind="expression" occursCount="self.numItems"/>
@@ -86,6 +102,11 @@
     <choice name="MyChoice">
         <element name="opt1" type="Option1" />
         <element name="opt2" type="Option2" />
+    </choice>
+    
+    <choice name="ChoiceWithDiscriminator">
+        <element name="opt3" type="Option3" />
+        <element name="opt4" type="Option4" />
     </choice>
 
 </model>

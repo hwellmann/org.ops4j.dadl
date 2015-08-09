@@ -13,6 +13,9 @@
     </xs:element>
 
     <xs:complexType name="DadlType" abstract="true">
+        <xs:sequence>
+            <xs:element name="discriminator" type="Discriminator" minOccurs="0"/>
+        </xs:sequence>
         <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
         <xs:attribute name="type" type="xs:NMTOKEN" />
         <xs:attribute name="adapter" type="xs:NMTOKEN" />
@@ -32,6 +35,13 @@
         <xs:attribute name="textStringJustification" type="xs:string" />
         <xs:attribute name="encoding" type="xs:string" />
     </xs:attributeGroup>
+    
+    <xs:complexType name="Discriminator">
+        <xs:attribute name="message" type="xs:string"/>
+        <xs:attribute name="testKind" type="TestKind" default="expression"/>
+        <xs:attribute name="test" type="xs:string"/>
+        <xs:attribute name="testPattern" type="xs:string"/>
+    </xs:complexType>
 
     <xs:complexType name="SimpleType">
         <xs:complexContent>
@@ -51,6 +61,13 @@
             <xs:enumeration value="calendar" />
             <xs:enumeration value="opaque" />
             <xs:enumeration value="boolean" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TestKind">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="expression" />
+            <xs:enumeration value="pattern" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -105,7 +122,13 @@
 
     <xs:complexType name="Element">
         <xs:complexContent>
-            <xs:extension base="DadlType">
+            <xs:extension base="DadlType"/>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="ChoiceElement">
+        <xs:complexContent>
+            <xs:extension base="Element">
                 <xs:sequence>
                     <xs:element name="tag" type="Tag" minOccurs="0" />
                     <xs:element name="lengthField" type="LengthField" minOccurs="0" />
@@ -152,7 +175,7 @@
         <xs:complexContent>
             <xs:extension base="DadlType">
                 <xs:sequence>
-                    <xs:element name="element" type="Element" minOccurs="0" maxOccurs="unbounded" />
+                    <xs:element name="element" type="ChoiceElement" minOccurs="0" maxOccurs="unbounded" />
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
