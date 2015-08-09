@@ -25,6 +25,10 @@
         lengthKind="implicit" adapter="varint"/>
 
     <simpleType name="String" contentType="text" javaType="java.lang.String" lengthKind="explicit" representation="text" />
+    
+    <simpleType name="Decimal4" contentType="integer" javaType="int" representation="text"
+        textNumberRep="standard" textNumberJustification="right" textNumberPadCharacter="0" 
+        lengthKind="explicit" length="4"/>
 
     <sequence name="AllNumbers">
         <element name="shortNumbers" type="ShortNumbers" />
@@ -108,5 +112,10 @@
         <element name="opt3" type="Option3" />
         <element name="opt4" type="Option4" />
     </choice>
+    
+    <sequence name="DecimalNumbers">
+        <element name="d1" type="Decimal4"/>
+        <element name="d2" type="Decimal4" length="2"/>
+    </sequence>
 
 </model>

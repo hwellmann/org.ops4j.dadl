@@ -146,7 +146,7 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
         writeBitfield(value, numBits);
     }
 
-    public void writeString(String value) throws IOException {
+    public void writeZeroTerminatedString(String value) throws IOException {
         byte[] bytes = value.getBytes(charset);
         if (bitOffset == 0) {
             write(bytes);

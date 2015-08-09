@@ -31,8 +31,11 @@
         <xs:attribute name="outputValueCalc" type="xs:string" />
         <xs:attribute name="textPadKind" type="TextPadKind" />
         <xs:attribute name="textTrimKind" type="TextTrimKind" />
+        <xs:attribute name="textNumberJustification" type="Justification" />
+        <xs:attribute name="textNumberRep" type="NumberRepresentation" default="standard"/>
+        <xs:attribute name="textNumberPadCharacter" type="xs:string" />
         <xs:attribute name="textStringPadCharacter" type="xs:string" />
-        <xs:attribute name="textStringJustification" type="xs:string" />
+        <xs:attribute name="textStringJustification" type="Justification" />
         <xs:attribute name="encoding" type="xs:string" />
     </xs:attributeGroup>
     
@@ -85,6 +88,13 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="NumberRepresentation">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="standard" />
+            <xs:enumeration value="zoned" />
+        </xs:restriction>
+    </xs:simpleType>
+
     <xs:simpleType name="LengthUnit">
         <xs:restriction base="xs:NMTOKEN">
             <xs:enumeration value="bit" />
@@ -104,6 +114,14 @@
         <xs:restriction base="xs:NMTOKEN">
             <xs:enumeration value="none" />
             <xs:enumeration value="padChar" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="Justification">
+        <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="left" />
+            <xs:enumeration value="right" />
+            <xs:enumeration value="center" />
         </xs:restriction>
     </xs:simpleType>
 

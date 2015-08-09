@@ -28,6 +28,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
+import org.ops4j.dadl.metamodel.gen.Justification;
 import org.ops4j.dadl.metamodel.gen.LengthField;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
 import org.ops4j.dadl.metamodel.gen.LengthUnit;
@@ -226,7 +227,7 @@ public class Marshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            writeSimpleValue(simpleType, numPayloadBits / 8, writer);
+            writeIntegerValueAsBinary(simpleType, numPayloadBits / 8, writer);
         }
         else {
             throw new UnmarshalException("length field must have simple type");
@@ -341,7 +342,10 @@ public class Marshaller {
         BitStreamWriter writer) throws IOException {
         switch (type.getRepresentation()) {
             case BINARY:
-                writeSimpleValue(type, fieldInfo, writer);
+                writeIntegerValueAsBinary(type, fieldInfo, writer);
+                break;
+            case TEXT:
+                writeIntegerValueAsText(element, fieldInfo, writer);
                 break;
             default:
                 throw new UnsupportedOperationException("unsupported representation: "
@@ -375,7 +379,7 @@ public class Marshaller {
         }
     }
 
-    private void writeSimpleValue(SimpleType type, Object info, BitStreamWriter writer)
+    private void writeIntegerValueAsBinary(SimpleType type, Object info, BitStreamWriter writer)
         throws IOException {
         evaluator.setSelf(info);
         if (writeValueViaAdapter(type, info, writer)) {
@@ -391,5 +395,53 @@ public class Marshaller {
             numBits *= 8;
         }
         writer.writeBits(value, (int) numBits);
+    }
+
+    private void writeIntegerValueAsText(DadlType type, Object info, BitStreamWriter writer)
+        throws IOException {
+        evaluator.setSelf(info);
+        if (writeValueViaAdapter(type, info, writer)) {
+            return;
+        }
+        long value = 0;
+        if (info instanceof Number) {
+            value = ((Number) info).longValue();
+            String s = Long.toString(value);
+            int numBytes = evaluator.computeLength(type);
+            if (s.length() > numBytes) {
+                throw new MarshalException(numBytes + " bytes are not sufficient for value " + s);
+            }
+            writeTextWithPadding(s, numBytes, type.getTextNumberJustification(),
+                type.getTextNumberPadCharacter(), writer);
+        }
+    }
+
+    private void writeTextWithPadding(String s, int numBytes, Justification justification,
+        String padCharacter, BitStreamWriter writer) throws IOException {
+        int totalPadding = numBytes - s.length();
+        int leftPadding = totalPadding;
+        int rightPadding = totalPadding;
+        switch (justification) {
+            case LEFT:
+                leftPadding = 0;
+                break;
+            case RIGHT:
+                rightPadding = 0;
+                break;
+            case CENTER:
+                leftPadding /= 2;
+                rightPadding = leftPadding;
+                if (leftPadding + rightPadding < totalPadding) {
+                    leftPadding++;
+                }
+                break;
+        }
+        for (int i = 0; i < leftPadding; i++) {
+            writer.writeBytes(padCharacter);
+        }
+        writer.writeBytes(s);
+        for (int i = 0; i < rightPadding; i++) {
+            writer.writeBytes(padCharacter);
+        }
     }
 }

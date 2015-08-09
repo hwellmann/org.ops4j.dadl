@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.ops4j.dadl.io.BitStreamReader;
@@ -334,7 +335,7 @@ public class Unmarshaller {
         }
         switch (simpleType.getContentType()) {
             case INTEGER:
-                info = readIntegerValue(simpleType, klass, reader);
+                info = readIntegerValue(simpleType, element, klass, reader);
                 break;
             case TEXT:
                 info = readTextValue(simpleType, element, reader);
@@ -369,19 +370,19 @@ public class Unmarshaller {
         }
     }
 
-    private <T> T readIntegerValue(SimpleType simpleType, Class<T> klass, BitStreamReader reader)
+    private Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass, BitStreamReader reader)
         throws IOException {
         switch (simpleType.getRepresentation()) {
             case BINARY:
                 return readIntegerValueAsBinary(simpleType, klass, reader);
             case TEXT:
-                return readIntegerValueAsText(simpleType, klass, reader);
+                return readIntegerValueAsText(simpleType, element, klass, reader);
             default:
                 throw new IllegalStateException();
         }
     }
 
-    private <T> T readIntegerValueAsBinary(SimpleType simpleType, Class<T> klass,
+    private Number readIntegerValueAsBinary(SimpleType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
@@ -397,9 +398,16 @@ public class Unmarshaller {
         return convertLong(value, klass);
     }
 
-    private <T> T readIntegerValueAsText(SimpleType simpleType, Class<T> klass,
+    private Number readIntegerValueAsText(SimpleType type, Element element, Class<?> klass,
         BitStreamReader reader) throws IOException {
-        return null;
+        if (type.getLengthKind() == LengthKind.EXPLICIT) {
+            long length = evaluator.computeLength(element);
+            byte[] bytes = new byte[(int) length];
+            reader.read(bytes);
+            String s = new String(bytes, StandardCharsets.UTF_8);
+            return convertLong(Long.parseLong(s), klass);
+        }
+        throw new UnsupportedOperationException();
     }
 
     private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader)
@@ -418,18 +426,17 @@ public class Unmarshaller {
         throw new UnsupportedOperationException();
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T convertLong(long value, Class<T> klass) {
+    private Number convertLong(long value, Class<?> klass) {
         if (Integer.class.isAssignableFrom(klass)) {
-            return (T) Integer.valueOf((int) value);
+            return Integer.valueOf((int) value);
         }
         if (Short.class.isAssignableFrom(klass)) {
-            return (T) Short.valueOf((short) value);
+            return Short.valueOf((short) value);
         }
         if (Byte.class.isAssignableFrom(klass)) {
-            return (T) Byte.valueOf((byte) value);
+            return Byte.valueOf((byte) value);
         }
-        return (T) (Long) value;
+        return value;
     }
 
     private <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)

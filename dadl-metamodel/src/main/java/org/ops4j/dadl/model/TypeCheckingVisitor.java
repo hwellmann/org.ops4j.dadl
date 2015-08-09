@@ -119,6 +119,15 @@ public class TypeCheckingVisitor extends BaseVisitor {
         if (derived.getTextStringJustification() == null) {
             derived.setTextStringJustification(base.getTextStringJustification());
         }
+        if (derived.getTextNumberPadCharacter() == null) {
+            derived.setTextNumberPadCharacter(base.getTextNumberPadCharacter());
+        }
+        if (derived.getTextNumberJustification() == null) {
+            derived.setTextNumberJustification(base.getTextNumberJustification());
+        }
+        if (derived.getTextNumberRep() == null) {
+            derived.setTextNumberRep(base.getTextNumberRep());
+        }
         if (derived.getEncoding() == null) {
             derived.setEncoding(base.getEncoding());
         }

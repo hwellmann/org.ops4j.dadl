@@ -39,6 +39,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.AllNumbers;
 import demo.simple.ChoiceWithDiscriminator;
+import demo.simple.DecimalNumbers;
 import demo.simple.LongNumbers;
 import demo.simple.MyChoice;
 import demo.simple.NumberList;
@@ -287,4 +288,28 @@ public class AllNumbersTest {
         assertThat(choice.getOpt4().getI41(), is(42));
         assertThat(choice.getOpt4().getI42(), is(12345678));
     }
+
+    @Test
+    public void shouldUnmarshalDecimalNumbers() throws Exception {
+        String marshalled = "005612";
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+        DecimalNumbers numbers = parser.unmarshal(marshalled.getBytes(), DecimalNumbers.class);
+        assertThat(numbers, is(notNullValue()));
+        assertThat(numbers.getD1(), is(56));
+        assertThat(numbers.getD2(), is(12));
+    }
+
+    @Test
+    public void shouldMarshalDecimalNumbers() throws Exception {
+        DecimalNumbers numbers = new DecimalNumbers();
+        numbers.setD1(56);
+        numbers.setD2(12);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(numbers, os);
+        String marshalled = os.toString();
+        assertThat(marshalled, is("005612"));
+    }
+
 }
