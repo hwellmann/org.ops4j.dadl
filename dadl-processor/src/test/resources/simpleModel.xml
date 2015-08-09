@@ -1,5 +1,4 @@
-<model xmlns="urn:dadl:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:dadl:0.1 metamodel.xsd">
+<model xmlns="urn:dadl:0.1">
 
 
     <simpleType name="Int8" contentType="integer" javaType="int" representation="binary"
@@ -60,11 +59,6 @@
         <element name="i22" type="Int32" />
     </sequence>
 
-    <choice name="MyChoice">
-        <element name="opt1" type="Option1" />
-        <element name="opt2" type="Option2" />
-    </choice>
-
     <sequence name="NumberList">
         <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
         <element name="items" type="Int32" occursCountKind="expression" occursCount="self.numItems"/>
@@ -88,5 +82,10 @@
         <element name="len" type="UInt8" outputValueCalc="self.text.length()"/>
         <element name="text" type="String" lengthKind="explicit" length="self.len" encoding="UTF-8"/>
     </sequence>    
+
+    <choice name="MyChoice">
+        <element name="opt1" type="Option1" />
+        <element name="opt2" type="Option2" />
+    </choice>
 
 </model>
