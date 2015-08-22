@@ -51,7 +51,7 @@
         <xs:complexContent>
             <xs:extension base="DadlType">
                 <xs:attribute name="contentType" type="ContentType" use="required" />
-                <xs:attribute name="javaType" type="xs:string" use="required" />
+                <xs:attribute name="mappedType" type="xs:string" use="required" />
                 <xs:attribute name="unsigned" type="xs:boolean" default="false" />
             </xs:extension>
         </xs:complexContent>

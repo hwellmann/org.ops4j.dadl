@@ -245,7 +245,7 @@ public class JavaModelGenerator {
     }
 
     private JType getJavaType(SimpleType simpleType) {
-        switch (simpleType.getJavaType()) {
+        switch (simpleType.getMappedType()) {
             case "boolean":
                 return codeModel.BOOLEAN;
             case "byte":
@@ -257,7 +257,7 @@ public class JavaModelGenerator {
             case "long":
                 return codeModel.LONG;
             default:
-                return codeModel.ref(simpleType.getJavaType());
+                return codeModel.ref(simpleType.getMappedType());
         }
     }
 

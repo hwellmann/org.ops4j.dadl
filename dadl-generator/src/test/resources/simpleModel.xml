@@ -2,30 +2,30 @@
     xsi:schemaLocation="urn:dadl:0.1 metamodel.xsd">
 
 
-    <simpleType name="Int8" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="Int8" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="8" lengthUnit="bit" />
-    <simpleType name="UInt8" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="UInt8" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="8" lengthUnit="bit" unsigned="true" />
 
-    <simpleType name="Int16" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="Int16" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="16" lengthUnit="bit" />
-    <simpleType name="UInt16" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="UInt16" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="16" lengthUnit="bit" unsigned="true" />
 
-    <simpleType name="Int24" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="Int24" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="24" lengthUnit="bit" />
-    <simpleType name="UInt24" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="UInt24" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="24" lengthUnit="bit" unsigned="true" />
 
-    <simpleType name="Int32" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="Int32" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="32" lengthUnit="bit" />
-    <simpleType name="UInt32" contentType="integer" javaType="long" representation="binary"
+    <simpleType name="UInt32" contentType="integer" mappedType="long" representation="binary"
         lengthKind="explicit" length="32" lengthUnit="bit" unsigned="true" />
 
-    <simpleType name="VarIntLength" contentType="integer" javaType="int" representation="binary"
+    <simpleType name="VarIntLength" contentType="integer" mappedType="int" representation="binary"
         lengthKind="implicit" adapter="varint"/>
 
-    <enumeration name="Colour" contentType="integer" javaType="int" representation="binary"
+    <enumeration name="Colour" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="8" lengthUnit="bit">
         <element name="red" decValue="11"/>
         <element name="yellow" decValue="14"/>
