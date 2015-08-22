@@ -4,12 +4,12 @@
 
     <xs:element name="model">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="simpleType" type="SimpleType" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="enumeration" type="Enumeration" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="sequence" type="Sequence" minOccurs="0" maxOccurs="unbounded" />
-                <xs:element name="choice" type="Choice" minOccurs="0" maxOccurs="unbounded" />
-            </xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="simpleType" type="SimpleType" />
+                <xs:element name="enumeration" type="Enumeration" />
+                <xs:element name="sequence" type="Sequence" />
+                <xs:element name="choice" type="Choice" />
+            </xs:choice>
         </xs:complexType>
     </xs:element>
 

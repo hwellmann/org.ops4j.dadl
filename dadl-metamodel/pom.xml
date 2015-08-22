@@ -24,7 +24,7 @@
                 <configuration>
                     <extension>true</extension>
                     <args>
-                        <arg>-Xannotate</arg>
+                        <arg>-Xsimplify</arg>
                         <!-- generate visitor classes -->
                         <arg>-Xvisitor</arg>
                         <!-- the plugin selects a random package, by default, so we define it explicitly -->
@@ -34,12 +34,14 @@
                     <schemaIncludes>
                         <include>xsd/dadl-metamodel.xsd</include>
                     </schemaIncludes>
-                    <bindingDirectory>src/main/resources/xjb</bindingDirectory>
+                    <bindingIncludes>
+                        <include>xsd/dadl-metamodel.xjb</include>
+                    </bindingIncludes>
                     <plugins>
                         <plugin>
                             <groupId>org.jvnet.jaxb2_commons</groupId>
-                            <artifactId>jaxb2-basics-annotate</artifactId>
-                            <version>1.0.1</version>
+                            <artifactId>jaxb2-basics</artifactId>
+                            <version>0.9.4</version>
                         </plugin>
                         <plugin>
                             <groupId>org.ops4j.xvisitor</groupId>
