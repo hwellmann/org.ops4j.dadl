@@ -30,6 +30,7 @@ import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Discriminator;
 import org.ops4j.dadl.metamodel.gen.Element;
+import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.LengthField;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
 import org.ops4j.dadl.metamodel.gen.LengthUnit;
@@ -270,7 +271,10 @@ public class Unmarshaller {
     private Object unmarshalSequenceIndividualField(Class<?> klass, Element element,
         BitStreamReader reader) throws IOException {
         DadlType fieldType = model.getType(element.getType());
-        if (fieldType instanceof SimpleType) {
+        if (fieldType instanceof Enumeration) {
+            return readEnumerationValue((Enumeration) fieldType, element, klass, reader);
+        }
+        else if (fieldType instanceof SimpleType) {
             return readSimpleValue((SimpleType) fieldType, element, klass, reader);
         }
         else {
@@ -323,6 +327,29 @@ public class Unmarshaller {
         finally {
             evaluator.popStack();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T readEnumerationValue(Enumeration enumeration, Element element, Class<T> klass,
+        BitStreamReader reader) throws IOException {
+        log.debug("reading simple value of type {}", enumeration.getName());
+        Object info = readValueViaAdapter(enumeration, Object.class, reader);
+        if (info != null) {
+            return (T) info;
+        }
+        switch (enumeration.getContentType()) {
+            case INTEGER:
+                info = readIntegerValue(enumeration, element, klass, reader);
+                break;
+            case TEXT:
+                info = readTextValue(enumeration, element, reader);
+                break;
+            default:
+                throw new UnsupportedOperationException(enumeration.getContentType().toString());
+        }
+        info = evaluator.setSelfEnumeration(info, klass);
+        checkDiscriminator(info, element);
+        return (T) info;
     }
 
     @SuppressWarnings("unchecked")

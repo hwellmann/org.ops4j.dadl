@@ -17,6 +17,7 @@
  */
 package org.ops4j.dadl.processor;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +76,40 @@ public class Evaluator {
     public void setSelf(Object info) {
         infoStack.set(0, info);
         processor.setValue("self", info);
+    }
+
+    public Object setSelfEnumeration(Object info, Class<?> klass) {
+        try {
+            Method method = getMethod("fromValue", klass);
+            processor.defineFunction("", "fromValue", method);
+            processor.setValue("info", info);
+            Object enumValue = processor.eval("fromValue(info)");
+            processor.setValue("info", enumValue);
+            infoStack.set(0, enumValue);
+            return enumValue;
+        }
+        catch (NoSuchMethodException exc) {
+            throw new UnmarshalException(exc);
+        }
+    }
+
+    public Object getEnumerationValue(Object info) {
+        processor.setValue("info", info);
+        return processor.eval("info.value");
+    }
+
+    /**
+     * @param name
+     * @param klass
+     * @return
+     */
+    private Method getMethod(String name, Class<?> klass) {
+        for (Method method : klass.getDeclaredMethods()) {
+            if (method.getName().equals(name)) {
+                return method;
+            }
+        }
+        throw new IllegalStateException();
     }
 
     /**

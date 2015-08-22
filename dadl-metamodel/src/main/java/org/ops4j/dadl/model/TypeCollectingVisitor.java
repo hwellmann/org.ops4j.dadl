@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
+import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.visitor.BaseVisitor;
@@ -32,9 +33,18 @@ import org.ops4j.dadl.metamodel.gen.visitor.VisitorAction;
  *
  */
 public class TypeCollectingVisitor extends BaseVisitor {
-    
+
     private Map<String, DadlType> typeMap = new HashMap<>();
-    
+
+    @Override
+    public VisitorAction enter(Enumeration enumeration) {
+        Object present = typeMap.putIfAbsent(enumeration.getName(), enumeration);
+        if (present != null) {
+            throw new IllegalArgumentException("duplicate type " + enumeration.getName());
+        }
+        return VisitorAction.CONTINUE;
+    }
+
     @Override
     public VisitorAction enter(Sequence sequence) {
         Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
@@ -44,6 +54,7 @@ public class TypeCollectingVisitor extends BaseVisitor {
         return VisitorAction.CONTINUE;
     }
 
+    @Override
     public VisitorAction enter(Choice sequence) {
         Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
         if (present != null) {
@@ -52,6 +63,7 @@ public class TypeCollectingVisitor extends BaseVisitor {
         return VisitorAction.CONTINUE;
     }
 
+    @Override
     public VisitorAction enter(SimpleType sequence) {
         Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
         if (present != null) {
@@ -59,7 +71,7 @@ public class TypeCollectingVisitor extends BaseVisitor {
         }
         return VisitorAction.CONTINUE;
     }
-    
+
     /**
      * Gets the typeMap.
      * @return the typeMap

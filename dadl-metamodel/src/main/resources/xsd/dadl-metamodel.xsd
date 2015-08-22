@@ -6,6 +6,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="simpleType" type="SimpleType" minOccurs="0" maxOccurs="unbounded" />
+                <xs:element name="enumeration" type="Enumeration" minOccurs="0" maxOccurs="unbounded" />
                 <xs:element name="sequence" type="Sequence" minOccurs="0" maxOccurs="unbounded" />
                 <xs:element name="choice" type="Choice" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
@@ -54,6 +55,23 @@
                 <xs:attribute name="unsigned" type="xs:boolean" default="false" />
             </xs:extension>
         </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="Enumeration">
+        <xs:complexContent>
+            <xs:extension base="SimpleType">
+                <xs:sequence>
+                    <xs:element name="element" type="EnumerationElement" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="EnumerationElement">
+        <xs:attribute name="name" type="xs:NMTOKEN" use="required"/>
+        <xs:attribute name="value" type="xs:string"/>
+        <xs:attribute name="decValue" type="xs:int"/>
+        <xs:attribute name="hexValue" type="xs:string"/>
     </xs:complexType>
 
     <xs:simpleType name="ContentType">

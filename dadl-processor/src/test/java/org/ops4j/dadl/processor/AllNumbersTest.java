@@ -39,10 +39,12 @@ import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.AllNumbers;
 import demo.simple.ChoiceWithDiscriminator;
+import demo.simple.Colour;
 import demo.simple.DecimalNumbers;
 import demo.simple.LongNumbers;
 import demo.simple.MyChoice;
 import demo.simple.NumberList;
+import demo.simple.NumberWithColour;
 import demo.simple.Option2;
 import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
@@ -310,6 +312,39 @@ public class AllNumbersTest {
         marshaller.marshal(numbers, os);
         String marshalled = os.toString();
         assertThat(marshalled, is("005612"));
+    }
+
+    @Test
+    public void shouldUnmarshalNumberWithColour() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeByte(22);
+        writer.writeByte(14);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(2));
+
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+        NumberWithColour nwc = parser.unmarshal(bytes, NumberWithColour.class);
+        assertThat(nwc, is(notNullValue()));
+        assertThat(nwc.getI1(), is(22));
+        assertThat(nwc.getC(), is(Colour.YELLOW));
+
+    }
+
+    @Test
+    public void shouldMarshalNumberWithColour() throws Exception {
+        NumberWithColour nwc = new NumberWithColour();
+        nwc.setI1(99);
+        nwc.setC(Colour.GREEN);
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(nwc, os);
+        assertThat(os.toByteArray().length, is(2));
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readByte(), is((byte) 99));
+        assertThat(reader.readByte(), is((byte) 17));
+        reader.close();
     }
 
 }

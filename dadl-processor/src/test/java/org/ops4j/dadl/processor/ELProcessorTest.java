@@ -18,9 +18,11 @@
 package org.ops4j.dadl.processor;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.lang.reflect.Method;
 import java.util.Stack;
 
 import javax.el.CompositeELResolver;
@@ -43,6 +45,11 @@ public class ELProcessorTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    public enum Size {
+        MEDIUM,
+        LARGE
+    }
 
     @Test
     public void shouldGetScalar() {
@@ -120,5 +127,16 @@ public class ELProcessorTest {
         assertThat(processor.eval("up[2]"), is("Level2"));
         levels.remove(0);
         assertThat(processor.eval("up[1]"), is("Level2"));
+    }
+
+    @Test
+    public void shouldConvertEnumValue() throws NoSuchMethodException, SecurityException {
+        ELProcessor processor = new ELProcessor();
+        Method method = Size.class.getMethod("valueOf", String.class);
+        processor.defineFunction("", "enumValue", method);
+        Object result = processor.eval("enumValue('LARGE')");
+        assertThat(result, instanceOf(Size.class));
+        assertThat((Size) result, is(Size.LARGE));
+
     }
 }

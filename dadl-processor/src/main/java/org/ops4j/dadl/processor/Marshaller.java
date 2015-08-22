@@ -28,6 +28,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
+import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.Justification;
 import org.ops4j.dadl.metamodel.gen.LengthField;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
@@ -256,7 +257,10 @@ public class Marshaller {
         BitStreamWriter writer) throws IOException {
         log.debug("marshalling field {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
-        if (fieldType instanceof SimpleType) {
+        if (fieldType instanceof Enumeration) {
+            marshalEnumerationField(fieldInfo, element, (Enumeration) fieldType, writer);
+        }
+        else if (fieldType instanceof SimpleType) {
             marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
         }
         else {
@@ -293,6 +297,12 @@ public class Marshaller {
         else {
             marshal(fieldInfo, fieldType, writer);
         }
+    }
+
+    private void marshalEnumerationField(Object fieldInfo, Element element, Enumeration enumeration,
+        BitStreamWriter writer) throws IOException {
+        Object rawValue = evaluator.getEnumerationValue(fieldInfo);
+        marshalSimpleField(rawValue, element, enumeration, writer);
     }
 
     /**

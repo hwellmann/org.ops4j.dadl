@@ -29,16 +29,21 @@ import javax.annotation.Generated;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
+import org.ops4j.dadl.metamodel.gen.Enumeration;
+import org.ops4j.dadl.metamodel.gen.EnumerationElement;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.model.ValidatedModel;
 
+import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -93,6 +98,7 @@ public class JavaModelGenerator {
 
         model.getTypeMap().forEach((n, type) -> createType(type));
 
+        model.getModel().getEnumeration().stream().forEach(e -> fillEnumeration(e));
         model.getModel().getSequence().stream().forEach(s -> fillSequencePojo(s));
         model.getModel().getChoice().stream().forEach(s -> fillChoicePojo(s));
 
@@ -116,6 +122,10 @@ public class JavaModelGenerator {
                 Choice choice = (Choice) type;
                 klass = pkg._class(choice.getName());
             }
+            else if (type instanceof Enumeration) {
+                Enumeration enumeration = (Enumeration) type;
+                klass = pkg._enum(enumeration.getName());
+            }
             if (klass != null) {
                 klass.annotate(Generated.class).param("value", getClass().getName())
                     .param("date", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
@@ -126,10 +136,54 @@ public class JavaModelGenerator {
         }
     }
 
+    private void fillEnumeration(Enumeration enumeration) {
+        JDefinedClass klass = pkg._getClass(enumeration.getName());
+        JType jtype = getJavaType(enumeration).boxify();
+        enumeration.getElement().forEach(e -> generateEnumerationElement(klass, e));
+        generateEnumerationFieldAndGetter(klass, jtype);
+        generateEnumerationConstructor(klass, jtype);
+        generateEnumerationFromValueMethod(enumeration, klass, jtype);
+    }
+
     /**
-     * @param s
-     * @return
+     * @param enumeration
+     * @param klass
+     * @param jtype
      */
+    private void generateEnumerationFromValueMethod(Enumeration enumeration, JDefinedClass klass,
+        JType jtype) {
+        JMethod method = klass.method(JMod.PUBLIC | JMod.STATIC, klass, "fromValue");
+        JVar valueParam = method.param(jtype, "value");
+        JBlock methodBody = method.body();
+        JBlock foreachBody = methodBody.forEach(klass, "v", klass.staticInvoke("values")).body();
+        JFieldRef vRef = JExpr.ref("v");
+        foreachBody._if(vRef.invoke("getValue").invoke("equals").arg(valueParam))
+            ._then()._return(vRef);
+        methodBody._throw(JExpr._new(codeModel.ref(IllegalArgumentException.class))
+            .arg(JExpr.lit("illegal enumeration value: ").plus(JExpr.ref("value"))));
+    }
+
+    /**
+     * @param klass
+     * @param jtype
+     */
+    private void generateEnumerationConstructor(JDefinedClass klass, JType jtype) {
+        JMethod constructor = klass.constructor(JMod.PRIVATE);
+        JVar param = constructor.param(jtype, "value");
+        constructor.body().assign(JExpr._this().ref("value"), param);
+    }
+
+    /**
+     * @param klass
+     * @param jtype
+     */
+    private void generateEnumerationFieldAndGetter(JDefinedClass klass, JType jtype) {
+        JFieldVar field = klass.field(JMod.PRIVATE, jtype, "value");
+
+        JMethod getter = klass.method(JMod.PUBLIC, jtype, getGetterName("value"));
+        getter.body()._return(field);
+    }
+
     private void fillSequencePojo(Sequence sequence) {
         JDefinedClass klass = pkg._getClass(sequence.getName());
         sequence.getElement().forEach(e -> generateSequenceFieldAndAccessors(klass, e));
@@ -138,6 +192,20 @@ public class JavaModelGenerator {
     private void fillChoicePojo(Choice choice) {
         JDefinedClass klass = pkg._getClass(choice.getName());
         choice.getElement().forEach(e -> generateFieldAndAccessors(klass, e));
+    }
+
+    private void generateEnumerationElement(JDefinedClass klass, EnumerationElement element) {
+        JExpression expr = null;
+        if (element.getDecValue() != null) {
+            expr = JExpr.lit(element.getDecValue());
+        }
+        else if (element.getHexValue() != null) {
+            expr = JExpr.lit(Integer.parseInt(element.getHexValue(), 16));
+        }
+        else if (element.getValue() != null) {
+            expr = JExpr.lit(element.getValue());
+        }
+        klass.enumConstant(element.getName().toUpperCase()).arg(expr);
     }
 
     private void generateSequenceFieldAndAccessors(JDefinedClass klass, SequenceElement element) {
@@ -185,7 +253,10 @@ public class JavaModelGenerator {
     private JType getJavaType(Element element) {
         DadlType type = model.getType(element.getType());
         JType jtype = null;
-        if (type instanceof SimpleType) {
+        if (type instanceof Enumeration) {
+            jtype = codeModel._getClass(String.format("%s.%s", packageName, type.getName()));
+        }
+        else if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
             jtype = getJavaType(simpleType);
         }

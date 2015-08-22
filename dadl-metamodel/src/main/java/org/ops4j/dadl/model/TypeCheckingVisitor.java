@@ -17,6 +17,7 @@
  */
 package org.ops4j.dadl.model;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,8 @@ import java.util.Set;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
+import org.ops4j.dadl.metamodel.gen.Enumeration;
+import org.ops4j.dadl.metamodel.gen.EnumerationElement;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
@@ -71,6 +74,21 @@ public class TypeCheckingVisitor extends BaseVisitor {
     @Override
     public VisitorAction enter(SimpleType simpleType) {
         linkType(simpleType);
+        return VisitorAction.CONTINUE;
+    }
+
+    @Override
+    public VisitorAction enter(Enumeration enumeration) {
+        linkType(enumeration);
+        Map<String, EnumerationElement> elements = new HashMap<>();
+        for (EnumerationElement element : enumeration.getElement()) {
+            EnumerationElement present = elements.putIfAbsent(element.getName(), element);
+            if (present != null) {
+                String msg = String.format("duplicate enumeration element %s.%s", enumeration.getName(), element.getName());
+                throw new IllegalArgumentException(msg);
+            }
+            // TODO validate values
+        }
         return VisitorAction.CONTINUE;
     }
 

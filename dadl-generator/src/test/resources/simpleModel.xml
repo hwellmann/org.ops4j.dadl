@@ -25,6 +25,13 @@
     <simpleType name="VarIntLength" contentType="integer" javaType="int" representation="binary"
         lengthKind="implicit" adapter="varint"/>
 
+    <enumeration name="Colour" contentType="integer" javaType="int" representation="binary"
+        lengthKind="explicit" length="8" lengthUnit="bit">
+        <element name="red" decValue="11"/>
+        <element name="yellow" decValue="14"/>
+        <element name="green" decValue="17"/>
+    </enumeration>    
+
     <sequence name="AllNumbers">
         <element name="shortNumbers" type="ShortNumbers" />
         <element name="longNumbers" type="LongNumbers" />
