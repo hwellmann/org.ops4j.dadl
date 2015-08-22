@@ -31,6 +31,7 @@ import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.EnumerationElement;
+import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
@@ -53,8 +54,10 @@ import com.sun.codemodel.JVar;
 import com.sun.codemodel.writer.FileCodeWriter;
 
 /**
- * Generates Java source files from a given model. The will be one POJO for each complex type. The
- * source will be output when the {@link #generateJavaModel()} method is called.
+ * Generates Java source files from a given model. There will be one POJO for each complex type and
+ * one Java enum for each enumeration type.
+ * <p>
+ * The source will be output when the {@link #generateJavaModel()} method is called.
  *
  * @author hwellmann
  *
@@ -98,19 +101,15 @@ public class JavaModelGenerator {
 
         model.getTypeMap().forEach((n, type) -> createType(type));
 
-        model.getModel().getEnumeration().stream().forEach(e -> fillEnumeration(e));
-        model.getModel().getSequence().stream().forEach(s -> fillSequencePojo(s));
-        model.getModel().getChoice().stream().forEach(s -> fillChoicePojo(s));
+        Model rawModel = model.getModel();
+        rawModel.getEnumeration().stream().forEach(e -> fillEnumeration(e));
+        rawModel.getSequence().stream().forEach(s -> fillSequencePojo(s));
+        rawModel.getChoice().stream().forEach(s -> fillChoicePojo(s));
 
         outputDir.toFile().mkdirs();
         codeModel.build(new FileCodeWriter(outputDir.toFile()));
     }
 
-    /**
-     * @param type
-     * @return
-     * @throws JClassAlreadyExistsException
-     */
     private void createType(Object type) {
         try {
             JDefinedClass klass = null;
@@ -145,11 +144,6 @@ public class JavaModelGenerator {
         generateEnumerationFromValueMethod(enumeration, klass, jtype);
     }
 
-    /**
-     * @param enumeration
-     * @param klass
-     * @param jtype
-     */
     private void generateEnumerationFromValueMethod(Enumeration enumeration, JDefinedClass klass,
         JType jtype) {
         JMethod method = klass.method(JMod.PUBLIC | JMod.STATIC, klass, "fromValue");
@@ -163,20 +157,12 @@ public class JavaModelGenerator {
             .arg(JExpr.lit("illegal enumeration value: ").plus(JExpr.ref("value"))));
     }
 
-    /**
-     * @param klass
-     * @param jtype
-     */
     private void generateEnumerationConstructor(JDefinedClass klass, JType jtype) {
         JMethod constructor = klass.constructor(JMod.PRIVATE);
         JVar param = constructor.param(jtype, "value");
         constructor.body().assign(JExpr._this().ref("value"), param);
     }
 
-    /**
-     * @param klass
-     * @param jtype
-     */
     private void generateEnumerationFieldAndGetter(JDefinedClass klass, JType jtype) {
         JFieldVar field = klass.field(JMod.PRIVATE, jtype, "value");
 
@@ -217,10 +203,6 @@ public class JavaModelGenerator {
         }
     }
 
-    /**
-     * @param klass
-     * @param element
-     */
     private void generateListFieldAndAccessors(JDefinedClass klass, SequenceElement element) {
         String fieldName = element.getName();
         JType elementType = getJavaType(element);
@@ -246,10 +228,6 @@ public class JavaModelGenerator {
         setter.body().assign(JExpr._this().ref(fieldName), p1);
     }
 
-    /**
-     * @param type
-     * @return
-     */
     private JType getJavaType(Element element) {
         DadlType type = model.getType(element.getType());
         JType jtype = null;
@@ -266,10 +244,6 @@ public class JavaModelGenerator {
         return jtype;
     }
 
-    /**
-     * @param simpleType
-     * @return
-     */
     private JType getJavaType(SimpleType simpleType) {
         switch (simpleType.getJavaType()) {
             case "boolean":
