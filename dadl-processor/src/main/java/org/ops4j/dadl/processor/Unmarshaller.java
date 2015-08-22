@@ -212,6 +212,7 @@ public class Unmarshaller {
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
                     reader);
+                checkDiscriminator(fieldValue, element);
                 evaluator.setParentProperty(element.getName(), fieldValue);
             }
         }
@@ -303,6 +304,7 @@ public class Unmarshaller {
                     }
                     else {
                         fieldValue = unmarshal(fieldType, field.getType(), reader);
+                        checkDiscriminator(fieldValue, element);
                     }
                     evaluator.setParentProperty(fieldName, fieldValue);
                     branchMatched = true;
