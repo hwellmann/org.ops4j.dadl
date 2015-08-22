@@ -1,0 +1,55 @@
+= DADL Data Description Language 
+OPS4J 
+:doctype: book 
+:toc: left 
+:toclevels: 3
+:toc-position: left 
+:toc-title: Pax Warp 
+:numbered:
+
+// Push titles down one level
+:leveloffset: 1
+
+++++ 
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+++++
+
+:icons: font
+
+= Introduction
+
+== Purpose
+
+DADL is a language for describing data formats, accompanied by a tool for parsing and generating 
+data in a given format described by a DADL model.
+
+Unlike most data modelling languages, DADL not only defines a logical content model, but also
+a precise representation of data as a binary stream. In fact, the main purpose of DADL is
+to formalize existing data formats that are loosely specified by examples, tabular descriptions
+or technical prose. 
+
+A DADL model is written in XML according to a given schema. Thus, no special tools are required
+to edit a DADL model.
+
+The DADL code generator generates types of a target language, logically corresponding to the 
+data types defined in a DADL model.
+
+The DADL runtime parses a DADL model and provides marshallers and unmarshallers for binary streams
+satisfying this model. A marshaller takes a target programming language object graph and serializes 
+it to a binary stream. Conversely, an unmarshaller deserializes a binary stream into a target 
+language object graph.
+
+== Java as target language
+
+While the DADL language is nothing but XML and does not depend on any given target language, the
+DADL reference implementation is focused on Java and relies heavily on established Java 
+specifications like JAXB and EL. 
+
+DADL comes with a Maven plugin to generate Java target classes from a DADL model during the
+build process. The generated model only contains simple beans and enums. The marshalling 
+and unmarshalling logic is not contained in the generated code, but in a DADL runtime library which
+does not depend on any given model.
+
+
+// Return to normal title levels 
+:leveloffset: 0

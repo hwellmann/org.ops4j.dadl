@@ -14,6 +14,7 @@
         <module>dadl-generator</module>
         <module>dadl-maven-plugin</module>
         <module>dadl-processor</module>
+        <module>dadl-manual</module>
     </modules>
     <dependencyManagement>
         <dependencies>
