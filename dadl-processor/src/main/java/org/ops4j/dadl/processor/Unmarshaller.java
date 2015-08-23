@@ -77,9 +77,29 @@ public class Unmarshaller {
      *             on read error
      */
     public <T> T unmarshal(byte[] bytes, Class<T> klass) throws IOException {
+        return unmarshal(bytes, 0, bytes.length, klass);
+    }
+
+    /**
+     * Unmarshals the given byte array into an info model object of the given class. The class must
+     * be mapped to a type in the current DADL model.
+     *
+     * @param bytes
+     *            byte array
+     * @param offset
+     *            offset of first byte to be read
+     * @param length
+     *            number of bytes to be read
+     * @param klass
+     *            info model class
+     * @return instance of model class
+     * @throws IOException
+     *             on read error
+     */
+    public <T> T unmarshal(byte[] bytes, int offset, int length, Class<T> klass) throws IOException {
         String typeName = klass.getSimpleName();
         DadlType type = model.getType(typeName);
-        try (BitStreamReader reader = new ByteArrayBitStreamReader(bytes)) {
+        try (BitStreamReader reader = new ByteArrayBitStreamReader(bytes, offset, length)) {
             return unmarshal(type, klass, reader);
         }
     }

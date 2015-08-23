@@ -29,6 +29,11 @@ public class ByteArrayBitStreamReader extends BitStreamReader {
     private ByteArrayInputStream bais;
     private long length;
 
+    public ByteArrayBitStreamReader(byte[] b, int offset, int length) {
+        bais = new ByteArrayInputStream(b, offset, length);
+        this.length = length;
+    }
+
     public ByteArrayBitStreamReader(byte[] b) {
         bais = new ByteArrayInputStream(b);
         length = b.length;
