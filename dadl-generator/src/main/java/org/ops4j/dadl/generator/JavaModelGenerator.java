@@ -108,6 +108,7 @@ public class JavaModelGenerator {
 
         outputDir.toFile().mkdirs();
         codeModel.build(new FileCodeWriter(outputDir.toFile()));
+        //codeModel.build(outputDir.toFile());
     }
 
     private void createType(Object type) {
@@ -245,19 +246,12 @@ public class JavaModelGenerator {
     }
 
     private JType getJavaType(SimpleType simpleType) {
-        switch (simpleType.getMappedType()) {
-            case "boolean":
-                return codeModel.BOOLEAN;
-            case "byte":
-                return codeModel.BYTE;
-            case "short":
-                return codeModel.SHORT;
-            case "int":
-                return codeModel.INT;
-            case "long":
-                return codeModel.LONG;
-            default:
-                return codeModel.ref(simpleType.getMappedType());
+        try {
+            return codeModel.parseType(simpleType.getMappedType());
+        }
+        catch (ClassNotFoundException exc) {
+            // TODO Auto-generated catch block
+            throw new IllegalArgumentException(simpleType.getMappedType());
         }
     }
 

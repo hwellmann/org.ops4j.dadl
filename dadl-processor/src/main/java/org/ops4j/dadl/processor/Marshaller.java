@@ -323,6 +323,9 @@ public class Marshaller {
             case TEXT:
                 marshalTextField(calculatedValue, element, type, writer);
                 break;
+            case OPAQUE:
+                marshalOpaqueField(calculatedValue, element, type, writer);
+                break;
             default:
                 throw new UnsupportedOperationException("unsupported content type: "
                     + type.getContentType());
@@ -372,6 +375,18 @@ public class Marshaller {
                 throw new UnmarshalException("computed text length does not match actual length");
             }
             byte[] bytes = text.getBytes(element.getEncoding());
+            writer.write(bytes, 0, bytes.length);
+        }
+    }
+
+    private void marshalOpaqueField(Object fieldInfo, Element element, SimpleType type,
+        BitStreamWriter writer) throws IOException {
+        if (fieldInfo instanceof byte[]) {
+            byte[] bytes = (byte[]) fieldInfo;
+            long length = evaluator.computeLength(element);
+            if (length != bytes.length) {
+                throw new UnmarshalException("computed length does not match actual length");
+            }
             writer.write(bytes, 0, bytes.length);
         }
     }

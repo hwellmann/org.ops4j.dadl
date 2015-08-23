@@ -25,6 +25,9 @@
     <simpleType name="VarIntLength" contentType="integer" mappedType="int" representation="binary"
         lengthKind="implicit" adapter="varint"/>
 
+    <simpleType name="Opaque" contentType="opaque" mappedType="byte[]" representation="binary"
+        lengthKind="explicit" lengthUnit="byte"/>
+
     <enumeration name="Colour" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="8" lengthUnit="bit">
         <element name="red" decValue="11"/>
@@ -74,6 +77,12 @@
         <element name="numItems" type="UInt8" outputValueCalc="self.items.size()"/>
         <element name="items" type="Int32" occursCount="self.numItems"/>
     </sequence>    
+
+    <sequence name="OpaqueContainer">
+        <element name="length" type="Int32"/>
+        <element name="content" type="Opaque" length="up[1].length"/>
+    </sequence>
+
 
 
 </model>

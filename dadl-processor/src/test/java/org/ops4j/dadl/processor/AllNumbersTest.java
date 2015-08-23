@@ -45,6 +45,7 @@ import demo.simple.LongNumbers;
 import demo.simple.MyChoice;
 import demo.simple.NumberList;
 import demo.simple.NumberWithColour;
+import demo.simple.OpaqueContainer;
 import demo.simple.Option2;
 import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
@@ -328,7 +329,6 @@ public class AllNumbersTest {
         assertThat(nwc, is(notNullValue()));
         assertThat(nwc.getI1(), is(22));
         assertThat(nwc.getC(), is(Colour.YELLOW));
-
     }
 
     @Test
@@ -344,6 +344,47 @@ public class AllNumbersTest {
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
         assertThat(reader.readByte(), is((byte) 99));
         assertThat(reader.readByte(), is((byte) 17));
+        reader.close();
+    }
+
+    @Test
+    public void shouldUnmarshalOpaqueContainer() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeInt(4);
+        writer.writeByte(20);
+        writer.writeByte(22);
+        writer.writeByte(24);
+        writer.writeByte(26);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(8));
+
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+        OpaqueContainer oc = parser.unmarshal(bytes, OpaqueContainer.class);
+        assertThat(oc, is(notNullValue()));
+        assertThat(oc.getLength(), is(4));
+        assertThat(oc.getContent().length, is(oc.getLength()));
+        assertThat(oc.getContent()[0], is((byte) 20));
+        assertThat(oc.getContent()[1], is((byte) 22));
+        assertThat(oc.getContent()[2], is((byte) 24));
+        assertThat(oc.getContent()[3], is((byte) 26));
+    }
+
+    @Test
+    public void shouldMarshalOpaqueContainer() throws Exception {
+        OpaqueContainer oc = new OpaqueContainer();
+        oc.setContent("DADL".getBytes());
+        oc.setLength(oc.getContent().length);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(oc, os);
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readInt(), is(4));
+        assertThat(reader.readByte(), is((byte) 'D'));
+        assertThat(reader.readByte(), is((byte) 'A'));
+        assertThat(reader.readByte(), is((byte) 'D'));
+        assertThat(reader.readByte(), is((byte) 'L'));
         reader.close();
     }
 

@@ -369,6 +369,9 @@ public class Unmarshaller {
             case TEXT:
                 info = readTextValue(simpleType, element, reader);
                 break;
+            case OPAQUE:
+                info = readOpaqueValue(simpleType, element, reader);
+                break;
             default:
                 throw new UnsupportedOperationException(simpleType.getContentType().toString());
         }
@@ -451,6 +454,17 @@ public class Unmarshaller {
             catch (UnsupportedEncodingException exc) {
                 throw new UnmarshalException(exc);
             }
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private byte[] readOpaqueValue(SimpleType type, DadlType representation, BitStreamReader reader)
+        throws IOException {
+        if (type.getLengthKind() == LengthKind.EXPLICIT) {
+            long length = evaluator.computeLength(representation);
+            byte[] bytes = new byte[(int) length];
+            reader.read(bytes);
+            return bytes;
         }
         throw new UnsupportedOperationException();
     }

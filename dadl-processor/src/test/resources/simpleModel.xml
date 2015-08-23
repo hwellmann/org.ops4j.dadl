@@ -30,6 +30,9 @@
         textNumberRep="standard" textNumberJustification="right" textNumberPadCharacter="0" 
         lengthKind="explicit" length="4"/>
 
+    <simpleType name="Opaque" contentType="opaque" mappedType="byte[]" representation="binary"
+        lengthKind="explicit" lengthUnit="byte"/>
+
     <enumeration name="Colour" contentType="integer" mappedType="int" representation="binary"
         lengthKind="explicit" length="8" lengthUnit="bit">
         <element name="red" decValue="11"/>
@@ -128,6 +131,11 @@
     <sequence name="NumberWithColour">
         <element name="i1" type="Int8"/>
         <element name="c" type="Colour"/>
+    </sequence>
+
+    <sequence name="OpaqueContainer">
+        <element name="length" type="Int32"/>
+        <element name="content" type="Opaque" length="up[1].length"/>
     </sequence>
 
 </model>
