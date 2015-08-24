@@ -196,6 +196,28 @@ public class Evaluator {
         return processor.eval(expression);
     }
 
+    /**
+     * Sets the variable with the given name to the given value.
+     *
+     * @param variableName
+     *            variable name
+     * @param value
+     *            variable value
+     */
+    public void setVariable(String variableName, Object value) {
+        processor.setValue(variableName, value);
+    }
+
+    /**
+     * Clears the variable with the given name.
+     *
+     * @param variableName
+     *            variable name
+     */
+    public void clearVariable(String variableName) {
+        processor.setValue(variableName, null);
+    }
+
     @Override
     public String toString() {
         return infoStack.toString();

@@ -51,6 +51,7 @@ import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
 import demo.simple.ParsedNumberList;
 import demo.simple.ShortNumbers;
+import demo.simple.TaggedString;
 
 
 /**
@@ -386,6 +387,22 @@ public class AllNumbersTest {
         assertThat(reader.readByte(), is((byte) 'D'));
         assertThat(reader.readByte(), is((byte) 'L'));
         reader.close();
+    }
+
+    @Test
+    public void shouldUnmarshalTaggedString() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        String text = "Hello DADL!";
+        writer.writeByte(0x0A);
+        writer.writeByte(text.length());
+        writer.writeBytes(text);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(13));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        TaggedString taggedString = unmarshaller.unmarshal(bytes, TaggedString.class);
+        assertThat(taggedString.getText(), is(text));
     }
 
 }

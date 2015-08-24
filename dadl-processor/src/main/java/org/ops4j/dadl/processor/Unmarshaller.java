@@ -167,13 +167,15 @@ public class Unmarshaller {
             }
             LengthField lengthField = sequence.getLengthField();
             if (lengthField != null) {
-                unmarshalLengthField(lengthField, reader);
+                long length = unmarshalLengthField(lengthField, reader);
+                evaluator.setVariable("$length", length);
             }
             for (SequenceElement element : sequence.getElement()) {
                 unmarshalSequenceField(info, klass, element, reader);
             }
         }
         finally {
+            evaluator.clearVariable("$length");
             evaluator.popStack();
         }
         return info;
