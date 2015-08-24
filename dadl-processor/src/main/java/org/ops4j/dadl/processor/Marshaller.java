@@ -406,6 +406,22 @@ public class Marshaller {
 
     private void writeIntegerValueAsBinary(SimpleType type, Object info, BitStreamWriter writer)
         throws IOException {
+        switch (type.getBinaryNumberRep()) {
+            case BINARY:
+                writeIntegerValueAsStandardBinary(type, info, writer);
+                break;
+            case BCD:
+                writeIntegerValueAsBcdBinary(type, info, writer);
+                break;
+            default:
+                throw new UnsupportedOperationException("unsupported binaryNumberRep = "
+                    + type.getBinaryNumberRep());
+        }
+    }
+
+    private void writeIntegerValueAsStandardBinary(SimpleType type, Object info,
+        BitStreamWriter writer) throws IOException {
+
         evaluator.setSelf(info);
         if (writeValueViaAdapter(type, info, writer)) {
             return;
@@ -420,6 +436,38 @@ public class Marshaller {
             numBits *= 8;
         }
         writer.writeBits(value, (int) numBits);
+    }
+
+    private void writeIntegerValueAsBcdBinary(SimpleType type, Object info, BitStreamWriter writer)
+        throws IOException {
+        evaluator.setSelf(info);
+        if (writeValueViaAdapter(type, info, writer)) {
+            return;
+        }
+        long value = 0;
+        if (info instanceof Number) {
+            value = ((Number) info).longValue();
+        }
+
+        long numBits = evaluator.computeLength(type);
+        if (type.getLengthUnit() == LengthUnit.BYTE) {
+            numBits *= 8;
+        }
+        if (numBits % 4 != 0) {
+            throw new UnmarshalException("BCD bit length must be divisible by 4");
+        }
+        long numDigits = numBits / 4;
+        String s = Long.toString(value);
+        long numPaddingDigits = numDigits - s.length();
+        if (numPaddingDigits < 0) {
+            throw new UnmarshalException("value too large for " + numDigits + " digits");
+        }
+        for (int i = 0; i < numPaddingDigits; i++) {
+            writer.writeBits(0, 4);
+        }
+        for (int i = 0; i < s.length(); i++) {
+            writer.writeBits(s.charAt(i) - '0', 4);
+        }
     }
 
     private void writeIntegerValueAsText(DadlType type, Object info, BitStreamWriter writer)

@@ -38,6 +38,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.AllNumbers;
+import demo.simple.BcdSequence;
 import demo.simple.ChoiceWithDiscriminator;
 import demo.simple.Colour;
 import demo.simple.DecimalNumbers;
@@ -405,4 +406,37 @@ public class AllNumbersTest {
         assertThat(taggedString.getText(), is(text));
     }
 
+    @Test
+    public void shouldUnmarshalBcdSequence() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeShort(4096);
+        writer.writeBits(1, 4);
+        writer.writeBits(2, 4);
+        writer.writeBits(3, 4);
+        writer.writeBits(4, 4);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(4));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        BcdSequence bcdSequence = unmarshaller.unmarshal(bytes, BcdSequence.class);
+        assertThat(bcdSequence.getI16(), is(4096));
+        assertThat(bcdSequence.getBcd(), is(1234));
+    }
+
+    @Test
+    public void shouldMarshalBcdSequence() throws Exception {
+        BcdSequence bcdSequence = new BcdSequence();
+        bcdSequence.setI16(9999);
+        bcdSequence.setBcd(2011);
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(bcdSequence, os);
+        assertThat(os.toByteArray().length, is(4));
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readShort(), is((short) 9999));
+        assertThat(reader.readByte(), is((byte) 0x20));
+        assertThat(reader.readByte(), is((byte) 0x11));
+        reader.close();
+    }
 }

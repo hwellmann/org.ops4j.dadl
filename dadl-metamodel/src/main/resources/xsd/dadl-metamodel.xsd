@@ -33,11 +33,12 @@
         <xs:attribute name="textPadKind" type="TextPadKind" />
         <xs:attribute name="textTrimKind" type="TextTrimKind" />
         <xs:attribute name="textNumberJustification" type="Justification" />
-        <xs:attribute name="textNumberRep" type="NumberRepresentation" default="standard"/>
+        <xs:attribute name="textNumberRep" type="TextNumberRepresentation" default="standard"/>
         <xs:attribute name="textNumberPadCharacter" type="xs:string" />
         <xs:attribute name="textStringPadCharacter" type="xs:string" />
         <xs:attribute name="textStringJustification" type="Justification" />
         <xs:attribute name="encoding" type="xs:string" />
+        <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation" default="binary"/>
     </xs:attributeGroup>
     
     <xs:complexType name="Discriminator">
@@ -106,10 +107,19 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="NumberRepresentation">
+    <xs:simpleType name="TextNumberRepresentation">
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="standard" />
             <xs:enumeration value="zoned" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="BinaryNumberRepresentation">
+        <xs:restriction base="xs:NCName">
+            <xs:enumeration value="binary" />
+            <xs:enumeration value="bcd" />
+            <xs:enumeration value="packed" />
+            <xs:enumeration value="ibm4690Packed" />
         </xs:restriction>
     </xs:simpleType>
 

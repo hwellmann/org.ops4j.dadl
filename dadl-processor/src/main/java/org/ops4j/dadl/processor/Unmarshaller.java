@@ -438,6 +438,18 @@ public class Unmarshaller {
 
     private Number readIntegerValueAsBinary(SimpleType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
+        switch (simpleType.getBinaryNumberRep()) {
+            case BINARY:
+                return readIntegerValueAsStandardBinary(simpleType, klass, reader);
+            case BCD:
+                return readIntegerValueAsBcdBinary(simpleType, klass, reader);
+            default:
+                throw new UnsupportedOperationException("unsupported binaryNumberRep = " + simpleType.getBinaryNumberRep());
+        }
+    }
+
+    private Number readIntegerValueAsStandardBinary(SimpleType simpleType, Class<?> klass,
+        BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
@@ -449,6 +461,30 @@ public class Unmarshaller {
         else {
             value = reader.readSignedBits(numBits);
         }
+        return convertLong(value, klass);
+    }
+
+    private Number readIntegerValueAsBcdBinary(SimpleType simpleType, Class<?> klass,
+        BitStreamReader reader) throws IOException {
+        int numBits = evaluator.computeLength(simpleType);
+        if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
+            numBits *= 8;
+        }
+        if (numBits % 4 != 0) {
+            throw new UnmarshalException("BCD bit length must be divisible by 4");
+        }
+        int numDigits = numBits / 4;
+        long value = 0;
+        for (int i = 0; i < numDigits; i++) {
+            value *= 10;
+            long digit = reader.readBits(4);
+            // TODO signed numbers, assume non-negative for now
+            if (digit > 9) {
+                throw new UnmarshalException("illegal digit: " + digit);
+            }
+            value += digit;
+        }
+
         return convertLong(value, klass);
     }
 
