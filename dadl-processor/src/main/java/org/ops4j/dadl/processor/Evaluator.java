@@ -24,7 +24,9 @@ import java.util.List;
 import javax.el.ELProcessor;
 
 import org.ops4j.dadl.metamodel.gen.DadlType;
+import org.ops4j.dadl.metamodel.gen.Discriminator;
 import org.ops4j.dadl.metamodel.gen.Tag;
+import org.ops4j.dadl.metamodel.gen.TestKind;
 
 /**
  * Wraps an Expression Language processor and maintains a stack of Java model objects. The stack
@@ -145,7 +147,13 @@ public class Evaluator {
      * @return length
      */
     public int computeLength(DadlType type) {
+        try {
         return (Integer) processor.getValue(type.getLength(), Integer.class);
+        }
+        catch (Exception exc) {
+            exc.printStackTrace();
+            return 0;
+        }
     }
 
     /**
@@ -221,5 +229,27 @@ public class Evaluator {
     @Override
     public String toString() {
         return infoStack.toString();
+    }
+
+    void checkDiscriminator(Object value, DadlType type) {
+        if (type == null) {
+            return;
+        }
+        Discriminator discriminator = type.getDiscriminator();
+        if (discriminator == null) {
+            return;
+        }
+        if (discriminator.getTestKind() == TestKind.PATTERN) {
+            throw new UnsupportedOperationException(discriminator.getTestKind().toString());
+        }
+        String test = discriminator.getTest();
+        boolean satisfied = evaluate(test, Boolean.class);
+        if (!satisfied) {
+            String msg = discriminator.getMessage();
+            if (msg == null) {
+                msg = String.format("%s not satisfied on %s", test, type.getName());
+            }
+            throw new AssertionError(msg);
+        }
     }
 }

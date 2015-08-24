@@ -18,10 +18,8 @@
 package org.ops4j.dadl.processor;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.ops4j.dadl.io.BitStreamReader;
@@ -57,11 +55,13 @@ public class Unmarshaller {
     private DadlContext context;
     private ValidatedModel model;
     private Evaluator evaluator;
+    private SimpleTypeReader simpleTypeReader;
 
     Unmarshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
         this.evaluator = new Evaluator();
+        this.simpleTypeReader = new SimpleTypeReader(context, evaluator);
     }
 
     /**
@@ -107,7 +107,7 @@ public class Unmarshaller {
     private <T> T unmarshal(DadlType type, Class<T> klass, BitStreamReader reader)
         throws IOException {
         long startPos = reader.getBitPosition();
-        T info = readValueViaAdapter(type, klass, reader);
+        T info = context.readValueViaAdapter(type, klass, reader);
         if (info == null) {
             info = newInstance(klass);
             evaluator.setSelf(info);
@@ -191,7 +191,7 @@ public class Unmarshaller {
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            long actualTag = readSimpleValue(simpleType, null, Long.class, reader);
+            long actualTag = simpleTypeReader.readSimpleValue(simpleType, null, Long.class, reader);
             long expectedTag = getExpectedValue(tag);
             log.debug("unmarshalling tag {}", expectedTag);
             if (actualTag != expectedTag) {
@@ -210,7 +210,7 @@ public class Unmarshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            Long lengthValue = readSimpleValue(simpleType, null, Long.class, reader);
+            Long lengthValue = simpleTypeReader.readSimpleValue(simpleType, null, Long.class, reader);
             log.debug("unmarshalled length field with value {}", lengthValue);
             return lengthValue;
         }
@@ -295,10 +295,10 @@ public class Unmarshaller {
         BitStreamReader reader) throws IOException {
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
-            return readEnumerationValue((Enumeration) fieldType, element, klass, reader);
+            return simpleTypeReader.readEnumerationValue((Enumeration) fieldType, element, klass, reader);
         }
         else if (fieldType instanceof SimpleType) {
-            return readSimpleValue((SimpleType) fieldType, element, klass, reader);
+            return simpleTypeReader.readSimpleValue((SimpleType) fieldType, element, klass, reader);
         }
         else {
             return unmarshal(fieldType, klass, reader);
@@ -320,9 +320,8 @@ public class Unmarshaller {
 
                     Object fieldValue;
                     if (fieldType instanceof SimpleType) {
-                        fieldValue = readSimpleValue((SimpleType) fieldType, element,
-                            field.getType(),
-                            reader);
+                        fieldValue = simpleTypeReader.readSimpleValue((SimpleType) fieldType,
+                            element, field.getType(), reader);
                     }
                     else {
                         fieldValue = unmarshal(fieldType, field.getType(), reader);
@@ -353,55 +352,6 @@ public class Unmarshaller {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T readEnumerationValue(Enumeration enumeration, Element element, Class<T> klass,
-        BitStreamReader reader) throws IOException {
-        log.debug("reading simple value of type {}", enumeration.getName());
-        Object info = readValueViaAdapter(enumeration, Object.class, reader);
-        if (info != null) {
-            return (T) info;
-        }
-        switch (enumeration.getContentType()) {
-            case INTEGER:
-                info = readIntegerValue(enumeration, element, klass, reader);
-                break;
-            case TEXT:
-                info = readTextValue(enumeration, element, reader);
-                break;
-            default:
-                throw new UnsupportedOperationException(enumeration.getContentType().toString());
-        }
-        info = evaluator.setSelfEnumeration(info, klass);
-        checkDiscriminator(info, element);
-        return (T) info;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass,
-        BitStreamReader reader) throws IOException {
-        log.debug("reading simple value of type {}", simpleType.getName());
-        Object info = readValueViaAdapter(simpleType, Object.class, reader);
-        if (info != null) {
-            return (T) info;
-        }
-        switch (simpleType.getContentType()) {
-            case INTEGER:
-                info = readIntegerValue(simpleType, element, klass, reader);
-                break;
-            case TEXT:
-                info = readTextValue(simpleType, element, reader);
-                break;
-            case OPAQUE:
-                info = readOpaqueValue(simpleType, element, reader);
-                break;
-            default:
-                throw new UnsupportedOperationException(simpleType.getContentType().toString());
-        }
-        evaluator.setSelf(info);
-        checkDiscriminator(info, element);
-        return (T) info;
-    }
-
     private void checkDiscriminator(Object value, DadlType type) {
         if (type == null) {
             return;
@@ -422,130 +372,5 @@ public class Unmarshaller {
             }
             throw new AssertionError(msg);
         }
-    }
-
-    private Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass, BitStreamReader reader)
-        throws IOException {
-        switch (simpleType.getRepresentation()) {
-            case BINARY:
-                return readIntegerValueAsBinary(simpleType, klass, reader);
-            case TEXT:
-                return readIntegerValueAsText(simpleType, element, klass, reader);
-            default:
-                throw new IllegalStateException();
-        }
-    }
-
-    private Number readIntegerValueAsBinary(SimpleType simpleType, Class<?> klass,
-        BitStreamReader reader) throws IOException {
-        switch (simpleType.getBinaryNumberRep()) {
-            case BINARY:
-                return readIntegerValueAsStandardBinary(simpleType, klass, reader);
-            case BCD:
-                return readIntegerValueAsBcdBinary(simpleType, klass, reader);
-            default:
-                throw new UnsupportedOperationException("unsupported binaryNumberRep = " + simpleType.getBinaryNumberRep());
-        }
-    }
-
-    private Number readIntegerValueAsStandardBinary(SimpleType simpleType, Class<?> klass,
-        BitStreamReader reader) throws IOException {
-        int numBits = evaluator.computeLength(simpleType);
-        if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
-        }
-        long value;
-        if (simpleType.isUnsigned()) {
-            value = reader.readBits(numBits);
-        }
-        else {
-            value = reader.readSignedBits(numBits);
-        }
-        return convertLong(value, klass);
-    }
-
-    private Number readIntegerValueAsBcdBinary(SimpleType simpleType, Class<?> klass,
-        BitStreamReader reader) throws IOException {
-        int numBits = evaluator.computeLength(simpleType);
-        if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
-        }
-        if (numBits % 4 != 0) {
-            throw new UnmarshalException("BCD bit length must be divisible by 4");
-        }
-        int numDigits = numBits / 4;
-        long value = 0;
-        for (int i = 0; i < numDigits; i++) {
-            value *= 10;
-            long digit = reader.readBits(4);
-            // TODO signed numbers, assume non-negative for now
-            if (digit > 9) {
-                throw new UnmarshalException("illegal digit: " + digit);
-            }
-            value += digit;
-        }
-
-        return convertLong(value, klass);
-    }
-
-    private Number readIntegerValueAsText(SimpleType type, Element element, Class<?> klass,
-        BitStreamReader reader) throws IOException {
-        if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(element);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
-            String s = new String(bytes, StandardCharsets.UTF_8);
-            return convertLong(Long.parseLong(s), klass);
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    private String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader)
-        throws IOException {
-        if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(representation);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
-            try {
-                return new String(bytes, representation.getEncoding());
-            }
-            catch (UnsupportedEncodingException exc) {
-                throw new UnmarshalException(exc);
-            }
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    private byte[] readOpaqueValue(SimpleType type, DadlType representation, BitStreamReader reader)
-        throws IOException {
-        if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(representation);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
-            return bytes;
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    private Number convertLong(long value, Class<?> klass) {
-        if (Integer.class.isAssignableFrom(klass)) {
-            return Integer.valueOf((int) value);
-        }
-        if (Short.class.isAssignableFrom(klass)) {
-            return Short.valueOf((short) value);
-        }
-        if (Byte.class.isAssignableFrom(klass)) {
-            return Byte.valueOf((byte) value);
-        }
-        return value;
-    }
-
-    private <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)
-        throws IOException {
-        DadlAdapter<T> adapter = context.getAdapter(type, klass);
-        if (adapter == null) {
-            return null;
-        }
-        return adapter.unmarshal(reader);
     }
 }

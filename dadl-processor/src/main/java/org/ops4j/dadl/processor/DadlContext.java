@@ -18,12 +18,14 @@
 package org.ops4j.dadl.processor;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
@@ -119,4 +121,15 @@ public class DadlContext {
         }
         return (DadlAdapter<T>) adapter;
     }
+
+
+    <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)
+        throws IOException {
+        DadlAdapter<T> adapter = getAdapter(type, klass);
+        if (adapter == null) {
+            return null;
+        }
+        return adapter.unmarshal(reader);
+    }
+
 }
