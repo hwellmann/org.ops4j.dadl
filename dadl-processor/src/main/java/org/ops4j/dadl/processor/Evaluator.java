@@ -147,13 +147,19 @@ public class Evaluator {
      * @return length
      */
     public int computeLength(DadlType type) {
-        try {
         return (Integer) processor.getValue(type.getLength(), Integer.class);
-        }
-        catch (Exception exc) {
-            exc.printStackTrace();
-            return 0;
-        }
+    }
+
+    /**
+     * Computes the mininum length of a type by evaluating its {@code minLength} expression (which may
+     * be a literal number).
+     *
+     * @param type
+     *            type with minimum length
+     * @return length
+     */
+    public int computeMinLength(DadlType type) {
+        return (Integer) processor.getValue(type.getMinLength(), Integer.class);
     }
 
     /**

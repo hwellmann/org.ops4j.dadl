@@ -127,10 +127,14 @@ public class Unmarshaller {
 
     private void skipPadding(DadlType type, long startPos, BitStreamReader reader)
         throws IOException {
-        if (type.getLengthKind() != LengthKind.EXPLICIT) {
+        boolean hasExactLength = (type.getLengthKind() == LengthKind.EXPLICIT);
+        boolean hasMinLength = (type.getMinLength() != null);
+        if (!(hasExactLength || hasMinLength)) {
             return;
         }
-        int numBits = evaluator.computeLength(type);
+
+        long numBits = hasExactLength ?
+            evaluator.computeLength(type) : evaluator.computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -139,6 +143,9 @@ public class Unmarshaller {
             return;
         }
         if (actualNumBits > numBits) {
+            if (hasMinLength) {
+                return;
+            }
             throw new UnmarshalException("actual length of " + type.getName()
                 + " exceeds explicit length of " + numBits + " bits");
         }

@@ -100,10 +100,14 @@ public class Marshaller {
 
     private void fillPadding(DadlType type, long startPos, BitStreamWriter writer)
         throws IOException {
-        if (type.getLengthKind() != LengthKind.EXPLICIT) {
+        boolean hasExactLength = (type.getLengthKind() == LengthKind.EXPLICIT);
+        boolean hasMinLength = (type.getMinLength() != null);
+        if (!(hasExactLength || hasMinLength)) {
             return;
         }
-        long numBits = evaluator.computeLength(type);
+
+        long numBits = hasExactLength ?
+            evaluator.computeLength(type) : evaluator.computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -112,6 +116,9 @@ public class Marshaller {
             return;
         }
         if (actualNumBits > numBits) {
+            if (hasMinLength) {
+                return;
+            }
             throw new UnmarshalException("actual length of " + type.getName()
                 + " exceeds explicit length of " + numBits + " bits");
         }
@@ -141,26 +148,27 @@ public class Marshaller {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
-        Tag tag = sequence.getTag();
-        if (tag != null) {
-            marshalTag(tag, writer);
-        }
-        LengthField lengthField = sequence.getLengthField();
-        if (lengthField == null) {
-            marshalSequencePayload(info, sequence, writer);
-        }
-        else {
-            ByteArrayBitStreamWriter payloadWriter = new ByteArrayBitStreamWriter();
-            marshalSequencePayload(info, sequence, payloadWriter);
-            long numPayloadBits = payloadWriter.getBitPosition();
-            marshalLengthField(lengthField, numPayloadBits, writer);
-            if (payloadWriter.getBitOffset() == 0) {
-                writer.write(payloadWriter.toByteArray());
+            Tag tag = sequence.getTag();
+            if (tag != null) {
+                marshalTag(tag, writer);
+            }
+            LengthField lengthField = sequence.getLengthField();
+            if (lengthField == null) {
+                marshalSequencePayload(info, sequence, writer);
             }
             else {
-                throw new UnsupportedOperationException("payload bitoffset != 0 is not supported");
+                ByteArrayBitStreamWriter payloadWriter = new ByteArrayBitStreamWriter();
+                marshalSequencePayload(info, sequence, payloadWriter);
+                long numPayloadBits = payloadWriter.getBitPosition();
+                marshalLengthField(lengthField, numPayloadBits, writer);
+                if (payloadWriter.getBitOffset() == 0) {
+                    writer.write(payloadWriter.toByteArray());
+                }
+                else {
+                    throw new UnsupportedOperationException(
+                        "payload bitoffset != 0 is not supported");
+                }
             }
-        }
         }
         finally {
             evaluator.popStack();

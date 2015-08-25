@@ -152,6 +152,9 @@ public class TypeCheckingVisitor extends BaseVisitor {
         if (derived.getLength() == null) {
             derived.setLength(base.getLength());
         }
+        if (derived.getMinLength() == null) {
+            derived.setMinLength(base.getMinLength());
+        }
         if (derived.getLengthKind() == null) {
             derived.setLengthKind(base.getLengthKind());
         }

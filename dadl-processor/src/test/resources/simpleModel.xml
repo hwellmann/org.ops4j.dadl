@@ -95,6 +95,15 @@
     <sequence name="NumberList">
         <element name="numItems" type="UInt8" outputValueCalc="up[1].items.size()"/>
         <element name="items" type="Int32" occursCountKind="expression" occursCount="up[1].numItems"/>
+    </sequence>
+    
+    <sequence name="SeqMinLength" minLength="20" lengthUnit="byte">
+        <element name="numberList" type="NumberList"/>
+    </sequence>    
+
+    <sequence name="SeqMinLengthSuffix">
+        <element name="sml" type="SeqMinLength"/>
+        <element name="suffix" type="Int8"/>
     </sequence>    
 
     <sequence name="ParsedNumberList">

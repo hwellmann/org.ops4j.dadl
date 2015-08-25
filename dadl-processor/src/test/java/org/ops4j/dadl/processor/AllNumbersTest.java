@@ -51,6 +51,8 @@ import demo.simple.Option2;
 import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
 import demo.simple.ParsedNumberList;
+import demo.simple.SeqMinLength;
+import demo.simple.SeqMinLengthSuffix;
 import demo.simple.ShortNumbers;
 import demo.simple.TaggedString;
 
@@ -439,4 +441,72 @@ public class AllNumbersTest {
         assertThat(reader.readByte(), is((byte) 0x11));
         reader.close();
     }
+
+    @Test
+    public void shouldMarshalSeqMinLength() throws Exception {
+        SeqMinLength sml = new SeqMinLength();
+        NumberList list = new NumberList();
+        list.getItems().add(17);
+        list.getItems().add(39);
+        sml.setNumberList(list);
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(sml, os);
+        assertThat(os.toByteArray().length, is(20));
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readByte(), is((byte) 2));
+        assertThat(reader.readInt(), is(17));
+        assertThat(reader.readInt(), is(39));
+        reader.close();
+    }
+
+    @Test
+    public void shouldMarshalSeqMinLengthNoPadding() throws Exception {
+        SeqMinLength sml = new SeqMinLength();
+        NumberList list = new NumberList();
+        list.getItems().add(17);
+        list.getItems().add(39);
+        list.getItems().add(23);
+        list.getItems().add(12);
+        list.getItems().add(92);
+        sml.setNumberList(list);
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(sml, os);
+        assertThat(os.toByteArray().length, is(21));
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readByte(), is((byte) 5));
+        assertThat(reader.readInt(), is(17));
+        assertThat(reader.readInt(), is(39));
+        assertThat(reader.readInt(), is(23));
+        assertThat(reader.readInt(), is(12));
+        assertThat(reader.readInt(), is(92));
+        reader.close();
+    }
+
+    @Test
+    public void shouldUnmarshalSeqMinLengthSuffix() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeByte(2);
+        writer.writeInt(17);
+        writer.writeInt(39);
+        for (int i = 0; i < 11; i++) {
+            writer.write(0);
+        }
+        writer.writeByte(99);
+        writer.close();
+
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(21));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        SeqMinLengthSuffix seqMinLength = unmarshaller.unmarshal(bytes, SeqMinLengthSuffix.class);
+        NumberList list = seqMinLength.getSml().getNumberList();
+        assertThat(list.getNumItems(), is(2));
+        assertThat(list.getItems().get(0), is(17));
+        assertThat(list.getItems().get(1), is(39));
+        assertThat(seqMinLength.getSuffix(), is(99));
+    }
+
+
 }

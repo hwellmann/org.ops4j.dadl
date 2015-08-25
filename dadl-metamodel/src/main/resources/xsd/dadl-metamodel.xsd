@@ -23,13 +23,20 @@
         <xs:attribute name="lengthUnit" type="LengthUnit" />
         <xs:attribute name="lengthKind" type="LengthKind" />
         <xs:attribute name="length" type="xs:string" />
-        <xs:attribute name="fillByte" type="xs:int" />
-        <xs:attributeGroup ref="RepresentationAttributes" />
-    </xs:complexType>
-
-    <xs:attributeGroup name="RepresentationAttributes">
+        <xs:attribute name="minLength" type="xs:string" />
         <xs:attribute name="representation" type="Representation" />
         <xs:attribute name="outputValueCalc" type="xs:string" />
+        <xs:attributeGroup ref="BinaryRepresentationAttributes" />
+        <xs:attributeGroup ref="TextRepresentationAttributes" />
+    </xs:complexType>
+
+    <xs:attributeGroup name="BinaryRepresentationAttributes">
+        <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation" default="binary"/>
+        <xs:attribute name="fillByte" type="xs:int" />
+    </xs:attributeGroup>
+
+
+    <xs:attributeGroup name="TextRepresentationAttributes">
         <xs:attribute name="textPadKind" type="TextPadKind" />
         <xs:attribute name="textTrimKind" type="TextTrimKind" />
         <xs:attribute name="textNumberJustification" type="Justification" />
@@ -38,7 +45,6 @@
         <xs:attribute name="textStringPadCharacter" type="xs:string" />
         <xs:attribute name="textStringJustification" type="Justification" />
         <xs:attribute name="encoding" type="xs:string" />
-        <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation" default="binary"/>
     </xs:attributeGroup>
     
     <xs:complexType name="Discriminator">
