@@ -29,7 +29,6 @@ import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
-import org.ops4j.dadl.metamodel.gen.Justification;
 import org.ops4j.dadl.metamodel.gen.LengthField;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
 import org.ops4j.dadl.metamodel.gen.LengthUnit;
@@ -55,11 +54,13 @@ public class Marshaller {
     private DadlContext context;
     private ValidatedModel model;
     private Evaluator evaluator;
+    private SimpleTypeWriter simpleTypeWriter;
 
     Marshaller(DadlContext context, ValidatedModel model) {
         this.context = context;
         this.model = model;
         this.evaluator = new Evaluator();
+        this.simpleTypeWriter = new SimpleTypeWriter(context, evaluator);
     }
 
     /**
@@ -83,7 +84,7 @@ public class Marshaller {
     private void marshal(Object info, DadlType type, BitStreamWriter writer) throws IOException {
         evaluator.setSelf(info);
         long startPos = writer.getBitPosition();
-        if (!writeValueViaAdapter(type, info, writer)) {
+        if (!context.writeValueViaAdapter(type, info, writer)) {
             if (type instanceof Sequence) {
                 marshalSequence(info, (Sequence) type, writer);
             }
@@ -166,6 +167,27 @@ public class Marshaller {
         }
     }
 
+    /**
+     * @param lengthField
+     * @param numPayloadBits
+     * @param writer
+     * @throws IOException
+     */
+    private void marshalLengthField(LengthField lengthField, long numPayloadBits,
+        BitStreamWriter writer) throws IOException {
+        DadlType type = model.getType(lengthField.getType());
+        if (type instanceof SimpleType) {
+            SimpleType simpleType = (SimpleType) type;
+            simpleTypeWriter.writeIntegerValueAsBinary(simpleType, numPayloadBits / 8, writer);
+        }
+        else {
+            throw new UnmarshalException("length field must have simple type");
+        }
+    }
+
+
+
+
     private void marshalChoice(Object info, Choice choice, BitStreamWriter writer)
         throws IOException {
         log.debug("marshalling choice {}", choice.getType());
@@ -217,24 +239,6 @@ public class Marshaller {
         return Long.parseUnsignedLong(tag.getHexValue(), 16);
     }
 
-    /**
-     * @param lengthField
-     * @param numPayloadBits
-     * @param writer
-     * @throws IOException
-     */
-    private void marshalLengthField(LengthField lengthField, long numPayloadBits,
-        BitStreamWriter writer) throws IOException {
-        DadlType type = model.getType(lengthField.getType());
-        if (type instanceof SimpleType) {
-            SimpleType simpleType = (SimpleType) type;
-            writeIntegerValueAsBinary(simpleType, numPayloadBits / 8, writer);
-        }
-        else {
-            throw new UnmarshalException("length field must have simple type");
-        }
-    }
-
     private void marshalSequencePayload(Object info, Sequence sequence, BitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
@@ -258,10 +262,10 @@ public class Marshaller {
         log.debug("marshalling field {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
-            marshalEnumerationField(fieldInfo, element, (Enumeration) fieldType, writer);
+            simpleTypeWriter.marshalEnumerationField(fieldInfo, element, (Enumeration) fieldType, writer);
         }
         else if (fieldType instanceof SimpleType) {
-            marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
+            simpleTypeWriter.marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
         }
         else {
             marshal(fieldInfo, fieldType, writer);
@@ -292,229 +296,11 @@ public class Marshaller {
         log.debug("marshalling branch {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof SimpleType) {
-            marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
+            simpleTypeWriter.marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
         }
         else {
             marshal(fieldInfo, fieldType, writer);
         }
     }
 
-    private void marshalEnumerationField(Object fieldInfo, Element element, Enumeration enumeration,
-        BitStreamWriter writer) throws IOException {
-        Object rawValue = evaluator.getEnumerationValue(fieldInfo);
-        marshalSimpleField(rawValue, element, enumeration, writer);
-    }
-
-    /**
-     * @param info
-     * @param klass
-     * @param field
-     * @param writer
-     * @throws IOException
-     */
-    private void marshalSimpleField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
-        log.debug("writing simple value of type {}", type.getName());
-        Object calculatedValue = calculateValue(fieldInfo, element, type);
-        switch (type.getContentType()) {
-            case INTEGER:
-                marshalIntegerField(calculatedValue, element, type, writer);
-                break;
-            case TEXT:
-                marshalTextField(calculatedValue, element, type, writer);
-                break;
-            case OPAQUE:
-                marshalOpaqueField(calculatedValue, element, type, writer);
-                break;
-            default:
-                throw new UnsupportedOperationException("unsupported content type: "
-                    + type.getContentType());
-        }
-    }
-
-    /**
-     * @param fieldInfo
-     * @param element
-     * @param type
-     * @return
-     */
-    private Object calculateValue(Object fieldInfo, Element element, SimpleType type) {
-        if (element instanceof SequenceElement) {
-            SequenceElement seqElem = (SequenceElement) element;
-            String expr = seqElem.getOutputValueCalc();
-            if (expr != null) {
-                Object value = evaluator.evaluate(expr);
-                evaluator.setParentProperty(element.getName(), value);
-                return value;
-            }
-        }
-        return fieldInfo;
-    }
-
-    private void marshalIntegerField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
-        switch (type.getRepresentation()) {
-            case BINARY:
-                writeIntegerValueAsBinary(type, fieldInfo, writer);
-                break;
-            case TEXT:
-                writeIntegerValueAsText(element, fieldInfo, writer);
-                break;
-            default:
-                throw new UnsupportedOperationException("unsupported representation: "
-                    + type.getRepresentation());
-        }
-    }
-
-    private void marshalTextField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
-        if (fieldInfo instanceof String) {
-            String text = (String) fieldInfo;
-            long length = evaluator.computeLength(element);
-            if (length != text.length()) {
-                throw new UnmarshalException("computed text length does not match actual length");
-            }
-            byte[] bytes = text.getBytes(element.getEncoding());
-            writer.write(bytes, 0, bytes.length);
-        }
-    }
-
-    private void marshalOpaqueField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
-        if (fieldInfo instanceof byte[]) {
-            byte[] bytes = (byte[]) fieldInfo;
-            long length = evaluator.computeLength(element);
-            if (length != bytes.length) {
-                throw new UnmarshalException("computed length does not match actual length");
-            }
-            writer.write(bytes, 0, bytes.length);
-        }
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private boolean writeValueViaAdapter(DadlType type, Object info, BitStreamWriter writer)
-        throws IOException {
-        DadlAdapter adapter = context.getAdapter(type, info.getClass());
-        if (adapter == null) {
-            return false;
-        }
-        else {
-            adapter.marshal(info, writer);
-            return true;
-        }
-    }
-
-    private void writeIntegerValueAsBinary(SimpleType type, Object info, BitStreamWriter writer)
-        throws IOException {
-        switch (type.getBinaryNumberRep()) {
-            case BINARY:
-                writeIntegerValueAsStandardBinary(type, info, writer);
-                break;
-            case BCD:
-                writeIntegerValueAsBcdBinary(type, info, writer);
-                break;
-            default:
-                throw new UnsupportedOperationException("unsupported binaryNumberRep = "
-                    + type.getBinaryNumberRep());
-        }
-    }
-
-    private void writeIntegerValueAsStandardBinary(SimpleType type, Object info,
-        BitStreamWriter writer) throws IOException {
-
-        evaluator.setSelf(info);
-        if (writeValueViaAdapter(type, info, writer)) {
-            return;
-        }
-        long value = 0;
-        if (info instanceof Number) {
-            value = ((Number) info).longValue();
-        }
-
-        long numBits = evaluator.computeLength(type);
-        if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
-        }
-        writer.writeBits(value, (int) numBits);
-    }
-
-    private void writeIntegerValueAsBcdBinary(SimpleType type, Object info, BitStreamWriter writer)
-        throws IOException {
-        evaluator.setSelf(info);
-        if (writeValueViaAdapter(type, info, writer)) {
-            return;
-        }
-        long value = 0;
-        if (info instanceof Number) {
-            value = ((Number) info).longValue();
-        }
-
-        long numBits = evaluator.computeLength(type);
-        if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
-        }
-        if (numBits % 4 != 0) {
-            throw new UnmarshalException("BCD bit length must be divisible by 4");
-        }
-        long numDigits = numBits / 4;
-        String s = Long.toString(value);
-        long numPaddingDigits = numDigits - s.length();
-        if (numPaddingDigits < 0) {
-            throw new UnmarshalException("value too large for " + numDigits + " digits");
-        }
-        for (int i = 0; i < numPaddingDigits; i++) {
-            writer.writeBits(0, 4);
-        }
-        for (int i = 0; i < s.length(); i++) {
-            writer.writeBits(s.charAt(i) - '0', 4);
-        }
-    }
-
-    private void writeIntegerValueAsText(DadlType type, Object info, BitStreamWriter writer)
-        throws IOException {
-        evaluator.setSelf(info);
-        if (writeValueViaAdapter(type, info, writer)) {
-            return;
-        }
-        long value = 0;
-        if (info instanceof Number) {
-            value = ((Number) info).longValue();
-            String s = Long.toString(value);
-            int numBytes = evaluator.computeLength(type);
-            if (s.length() > numBytes) {
-                throw new MarshalException(numBytes + " bytes are not sufficient for value " + s);
-            }
-            writeTextWithPadding(s, numBytes, type.getTextNumberJustification(),
-                type.getTextNumberPadCharacter(), writer);
-        }
-    }
-
-    private void writeTextWithPadding(String s, int numBytes, Justification justification,
-        String padCharacter, BitStreamWriter writer) throws IOException {
-        int totalPadding = numBytes - s.length();
-        int leftPadding = totalPadding;
-        int rightPadding = totalPadding;
-        switch (justification) {
-            case LEFT:
-                leftPadding = 0;
-                break;
-            case RIGHT:
-                rightPadding = 0;
-                break;
-            case CENTER:
-                leftPadding /= 2;
-                rightPadding = leftPadding;
-                if (leftPadding + rightPadding < totalPadding) {
-                    leftPadding++;
-                }
-                break;
-        }
-        for (int i = 0; i < leftPadding; i++) {
-            writer.writeBytes(padCharacter);
-        }
-        writer.writeBytes(s);
-        for (int i = 0; i < rightPadding; i++) {
-            writer.writeBytes(padCharacter);
-        }
-    }
 }

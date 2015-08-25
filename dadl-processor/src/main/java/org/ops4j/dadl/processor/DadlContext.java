@@ -26,6 +26,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.BitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
@@ -131,5 +132,20 @@ public class DadlContext {
         }
         return adapter.unmarshal(reader);
     }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    boolean writeValueViaAdapter(DadlType type, Object info, BitStreamWriter writer)
+        throws IOException {
+        DadlAdapter adapter = getAdapter(type, info.getClass());
+        if (adapter == null) {
+            return false;
+        }
+        else {
+            adapter.marshal(info, writer);
+            return true;
+        }
+    }
+
+
 
 }
