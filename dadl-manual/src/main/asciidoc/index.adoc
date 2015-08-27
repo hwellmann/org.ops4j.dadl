@@ -50,6 +50,10 @@ build process. The generated model only contains simple beans and enums. The mar
 and unmarshalling logic is not contained in the generated code, but in a DADL runtime library which
 does not depend on any given model.
 
+= The Metamodel
+
+
+
 
 // Return to normal title levels 
 :leveloffset: 0
