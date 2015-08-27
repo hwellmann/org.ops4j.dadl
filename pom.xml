@@ -9,9 +9,16 @@
     <artifactId>dadl</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    
+
     <name>OPS4J Data Description Language (DADL) Reactor</name>
-    
+
+    <scm>
+        <connection>scm:git:git@github.com:ops4j/org.ops4j.dadl.git</connection>
+        <developerConnection>scm:git:git@github.com:ops4j/org.ops4j.dadl.git</developerConnection>
+        <url>git@github.com:ops4j/org.ops4j.dadl.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <modules>
         <module>dadl-metamodel</module>
         <module>dadl-generator</module>
@@ -72,4 +79,25 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <url>http://ops4j.github.io/dadl/${project.version}/</url>
+    <inceptionYear>2015</inceptionYear>
+
+    <issueManagement>
+        <system>jira</system>
+        <url>http://team.ops4j.org/browse/DADL</url>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <id>hwellmann</id>
+            <name>Harald Wellmann</name>
+            <email>harald.wellmann@gmx.de</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>UTC+1</timezone>
+        </developer>
+    </developers>
+
 </project>
