@@ -20,7 +20,7 @@ package org.ops4j.dadl.io;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.imageio.stream.ImageInputStreamImpl;
@@ -32,7 +32,6 @@ import javax.imageio.stream.ImageInputStreamImpl;
 public abstract class BitStreamReader extends ImageInputStreamImpl {
 
     private ByteBuffer buffer = ByteBuffer.allocate(2048);
-    private Charset charset = Charset.forName("UTF-8");
 
     public long getBitPosition() {
         long pos = 8 * streamPos + bitOffset;
@@ -176,7 +175,7 @@ public abstract class BitStreamReader extends ImageInputStreamImpl {
             buffer.put(characterByte);
         }
         byte[] bytes = Arrays.copyOf(buffer.array(), buffer.position());
-        String result = new String(bytes, charset);
+        String result = new String(bytes, StandardCharsets.UTF_8);
         return result;
     }
 

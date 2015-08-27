@@ -20,18 +20,17 @@ package org.ops4j.dadl.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 /**
  * @author hwellmann
- * 
+ *
  */
 public class BitStreamWriter extends MemoryCacheImageOutputStream {
 
     protected OutputStream os;
-    private Charset charset = Charset.forName("UTF-8");
 
     public BitStreamWriter(OutputStream os) {
         super(os);
@@ -147,7 +146,7 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
     }
 
     public void writeZeroTerminatedString(String value) throws IOException {
-        byte[] bytes = value.getBytes(charset);
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
         if (bitOffset == 0) {
             write(bytes);
         }
