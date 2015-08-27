@@ -161,7 +161,7 @@ public abstract class BitStreamReader extends ImageInputStreamImpl {
     public BigInteger readSignedBigInteger(int numBits) throws IOException {
         BigInteger result = readBigInteger(numBits);
         if (result.testBit(numBits - 1)) {
-            result.subtract(BigInteger.ONE.shiftLeft(numBits));
+            result = result.subtract(BigInteger.ONE.shiftLeft(numBits));
         }
         return result;
     }
