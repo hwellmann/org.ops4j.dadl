@@ -20,7 +20,7 @@ package org.ops4j.dadl.io;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.ops4j.dadl.processor.DadlException;
+import org.ops4j.dadl.exc.Exceptions;
 
 /**
  * @author hwellmann
@@ -41,7 +41,7 @@ public class ByteArrayBitStreamWriter extends BitStreamWriter {
             close();
         }
         catch (IOException exc) {
-            throw new DadlException(exc);
+            throw Exceptions.unchecked(exc);
         }
         return baos.toByteArray();
     }
