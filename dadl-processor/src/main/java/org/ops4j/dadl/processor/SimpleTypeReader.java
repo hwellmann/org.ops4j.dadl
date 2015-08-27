@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
+import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;

@@ -23,6 +23,8 @@ import java.util.List;
 
 import javax.el.ELProcessor;
 
+import org.ops4j.dadl.exc.MarshalException;
+import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamWriter;
 import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.Choice;

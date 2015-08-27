@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ops4j.dadl.processor;
+package org.ops4j.dadl.exc;
 
 /**
- * Unmarshalling exception.
+ * Marshalling exception.
  *
  * @author Harald Wellmann
  *
  */
-public class UnmarshalException extends DadlException {
+public class MarshalException extends DadlException {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * Creates an empty exception.
      */
-    public UnmarshalException() {
+    public MarshalException() {
     }
 
     /**
@@ -39,7 +39,7 @@ public class UnmarshalException extends DadlException {
      * @param message
      *            exception message
      */
-    public UnmarshalException(String message) {
+    public MarshalException(String message) {
         super(message);
     }
 
@@ -51,7 +51,7 @@ public class UnmarshalException extends DadlException {
      * @param cause
      *            cause of this exception
      */
-    public UnmarshalException(String message, Throwable cause) {
+    public MarshalException(String message, Throwable cause) {
         super(message, cause);
     }
 
@@ -61,7 +61,7 @@ public class UnmarshalException extends DadlException {
      * @param cause
      *            cause of this exception
      */
-    public UnmarshalException(Throwable cause) {
+    public MarshalException(Throwable cause) {
         super(cause);
     }
 }

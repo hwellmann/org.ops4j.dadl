@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import org.ops4j.dadl.exc.DadlException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.DadlType;

@@ -19,6 +19,8 @@ package org.ops4j.dadl.processor;
 
 import java.io.IOException;
 
+import org.ops4j.dadl.exc.MarshalException;
+import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 

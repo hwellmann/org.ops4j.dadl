@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
+import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.metamodel.gen.Choice;

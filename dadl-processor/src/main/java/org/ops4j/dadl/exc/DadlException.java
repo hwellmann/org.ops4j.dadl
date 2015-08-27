@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ops4j.dadl.processor;
+package org.ops4j.dadl.exc;
 
 /**
  * Base class of all DADL exceptions. In most cases, more specific exceptions will be thrown.

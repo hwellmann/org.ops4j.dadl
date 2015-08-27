@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.el.ELProcessor;
 
+import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Discriminator;
 import org.ops4j.dadl.metamodel.gen.Tag;
