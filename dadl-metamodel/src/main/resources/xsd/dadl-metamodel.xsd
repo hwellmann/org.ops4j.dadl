@@ -8,6 +8,7 @@
                 <xs:element name="simpleType" type="SimpleType" />
                 <xs:element name="enumeration" type="Enumeration" />
                 <xs:element name="sequence" type="Sequence" />
+                <xs:element name="taggedSequence" type="TaggedSequence" />
                 <xs:element name="choice" type="Choice" />
             </xs:choice>
         </xs:complexType>
@@ -38,7 +39,6 @@
 
     <xs:attributeGroup name="TextRepresentationAttributes">
         <xs:attribute name="textPadKind" type="TextPadKind" />
-        <xs:attribute name="textTrimKind" type="TextTrimKind" />
         <xs:attribute name="textNumberJustification" type="Justification" />
         <xs:attribute name="textNumberRep" type="TextNumberRepresentation" default="standard"/>
         <xs:attribute name="textNumberPadCharacter" type="xs:string" />
@@ -84,11 +84,13 @@
     <xs:simpleType name="ContentType">
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="integer" />
-            <xs:enumeration value="real" />
             <xs:enumeration value="text" />
-            <xs:enumeration value="calendar" />
             <xs:enumeration value="opaque" />
+            <!-- TODO  
+            <xs:enumeration value="calendar" />
             <xs:enumeration value="boolean" />
+            <xs:enumeration value="real" />
+            -->
         </xs:restriction>
     </xs:simpleType>
 
@@ -116,7 +118,9 @@
     <xs:simpleType name="TextNumberRepresentation">
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="standard" />
+            <!-- TODO
             <xs:enumeration value="zoned" />
+             -->
         </xs:restriction>
     </xs:simpleType>
 
@@ -124,8 +128,6 @@
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="binary" />
             <xs:enumeration value="bcd" />
-            <xs:enumeration value="packed" />
-            <xs:enumeration value="ibm4690Packed" />
         </xs:restriction>
     </xs:simpleType>
 
@@ -144,13 +146,6 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="TextTrimKind">
-        <xs:restriction base="xs:NCName">
-            <xs:enumeration value="none" />
-            <xs:enumeration value="padChar" />
-        </xs:restriction>
-    </xs:simpleType>
-
     <xs:simpleType name="Justification">
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="left" />
@@ -163,8 +158,19 @@
         <xs:complexContent>
             <xs:extension base="DadlType">
                 <xs:sequence>
-                    <xs:element name="tag" type="Tag" minOccurs="0" />
-                    <xs:element name="lengthField" type="LengthField" minOccurs="0" />
+                    <xs:element name="element" type="SequenceElement" minOccurs="0"
+                        maxOccurs="unbounded" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="TaggedSequence">
+        <xs:complexContent>
+            <xs:extension base="DadlType">
+                <xs:sequence>
+                    <xs:element name="tag" type="Tag" />
+                    <xs:element name="lengthField" type="LengthField" />
                     <xs:element name="element" type="SequenceElement" minOccurs="0"
                         maxOccurs="unbounded" />
                 </xs:sequence>

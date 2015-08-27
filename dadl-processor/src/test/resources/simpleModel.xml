@@ -62,19 +62,19 @@
         <element name="u32" type="UInt32"/>
     </sequence>
 
-    <sequence name="Option1">
+    <taggedSequence name="Option1">
         <tag type="UInt8" hexValue="0A"/>
         <lengthField type="VarIntLength"/>
         <element name="i11" type="Int16" />
         <element name="i12" type="Int8" />
-    </sequence>
+    </taggedSequence>
 
-    <sequence name="Option2">
+    <taggedSequence name="Option2">
         <tag type="UInt8" hexValue="0B"/>
         <lengthField type="VarIntLength"/>
         <element name="i21" type="Int24" />
         <element name="i22" type="Int32" />
-    </sequence>
+    </taggedSequence>
 
     <sequence name="Option3">
         <element name="tag" type="UInt8">
@@ -150,11 +150,11 @@
         <element name="content" type="Opaque" length="up[1].length"/>
     </sequence>
 
-    <sequence name="TaggedString">
+    <taggedSequence name="TaggedString">
         <tag type="UInt8" hexValue="0A"/>
         <lengthField type="Int8"/>
         <element name="text" type="String" length="$length" encoding="ISO-8859-15"/>
-    </sequence>
+    </taggedSequence>
 
     <sequence name="BcdSequence">
         <element name="i16" type="UInt16"/>

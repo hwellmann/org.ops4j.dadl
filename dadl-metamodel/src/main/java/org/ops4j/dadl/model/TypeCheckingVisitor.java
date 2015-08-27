@@ -30,6 +30,7 @@ import org.ops4j.dadl.metamodel.gen.EnumerationElement;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
+import org.ops4j.dadl.metamodel.gen.TaggedSequence;
 import org.ops4j.dadl.metamodel.gen.visitor.BaseVisitor;
 import org.ops4j.dadl.metamodel.gen.visitor.VisitorAction;
 
@@ -93,14 +94,20 @@ public class TypeCheckingVisitor extends BaseVisitor {
     }
 
     @Override
-    public VisitorAction enter(Sequence simpleType) {
-        linkType(simpleType);
+    public VisitorAction enter(Sequence sequence) {
+        linkType(sequence);
         return VisitorAction.CONTINUE;
     }
 
     @Override
-    public VisitorAction enter(Choice simpleType) {
-        linkType(simpleType);
+    public VisitorAction enter(TaggedSequence sequence) {
+        linkType(sequence);
+        return VisitorAction.CONTINUE;
+    }
+
+    @Override
+    public VisitorAction enter(Choice choice) {
+        linkType(choice);
         return VisitorAction.CONTINUE;
     }
 
@@ -127,9 +134,6 @@ public class TypeCheckingVisitor extends BaseVisitor {
         }
         if (derived.getTextPadKind() == null) {
             derived.setTextPadKind(base.getTextPadKind());
-        }
-        if (derived.getTextTrimKind() == null) {
-            derived.setTextTrimKind(base.getTextTrimKind());
         }
         if (derived.getTextStringPadCharacter() == null) {
             derived.setTextStringPadCharacter(base.getTextStringPadCharacter());

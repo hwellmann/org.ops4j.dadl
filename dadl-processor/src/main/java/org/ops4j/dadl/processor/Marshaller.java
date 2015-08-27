@@ -36,6 +36,7 @@ import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.Tag;
+import org.ops4j.dadl.metamodel.gen.TaggedSequence;
 import org.ops4j.dadl.model.ValidatedModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,11 +89,14 @@ public class Marshaller {
             if (type instanceof Sequence) {
                 marshalSequence(info, (Sequence) type, writer);
             }
+            else if (type instanceof TaggedSequence) {
+                marshalTaggedSequence(info, (TaggedSequence) type, writer);
+            }
             else if (type instanceof Choice) {
                 marshalChoice(info, (Choice) type, writer);
             }
             else {
-                throw new UnmarshalException("cannot marshal type " + type.getClass().getName());
+                throw new MarshalException("cannot marshal type " + type.getClass().getName());
             }
         }
         fillPadding(type, startPos, writer);
@@ -148,17 +152,29 @@ public class Marshaller {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
+            marshalSequencePayload(info, sequence, writer);
+        }
+        finally {
+            evaluator.popStack();
+        }
+    }
+
+    private void marshalTaggedSequence(Object info, TaggedSequence sequence, BitStreamWriter writer)
+        throws IOException {
+        log.debug("marshalling sequence {}", sequence.getName());
+        evaluator.pushStack();
+        try {
             Tag tag = sequence.getTag();
             if (tag != null) {
                 marshalTag(tag, writer);
             }
             LengthField lengthField = sequence.getLengthField();
             if (lengthField == null) {
-                marshalSequencePayload(info, sequence, writer);
+                marshalTaggedSequencePayload(info, sequence, writer);
             }
             else {
                 ByteArrayBitStreamWriter payloadWriter = new ByteArrayBitStreamWriter();
-                marshalSequencePayload(info, sequence, payloadWriter);
+                marshalTaggedSequencePayload(info, sequence, payloadWriter);
                 long numPayloadBits = payloadWriter.getBitPosition();
                 marshalLengthField(lengthField, numPayloadBits, writer);
                 if (payloadWriter.getBitOffset() == 0) {
@@ -248,6 +264,13 @@ public class Marshaller {
     }
 
     private void marshalSequencePayload(Object info, Sequence sequence, BitStreamWriter writer)
+        throws IOException {
+        for (SequenceElement element : sequence.getElement()) {
+            marshalSequenceField(info, element, writer);
+        }
+    }
+
+    private void marshalTaggedSequencePayload(Object info, TaggedSequence sequence, BitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
             marshalSequenceField(info, element, writer);

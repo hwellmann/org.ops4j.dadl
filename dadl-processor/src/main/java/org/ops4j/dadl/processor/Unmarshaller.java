@@ -36,6 +36,7 @@ import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.ops4j.dadl.metamodel.gen.Tag;
+import org.ops4j.dadl.metamodel.gen.TaggedSequence;
 import org.ops4j.dadl.metamodel.gen.TestKind;
 import org.ops4j.dadl.model.ValidatedModel;
 import org.slf4j.Logger;
@@ -114,6 +115,9 @@ public class Unmarshaller {
             if (type instanceof Sequence) {
                 info = unmarshalSequence(info, (Sequence) type, klass, reader);
             }
+            else if (type instanceof TaggedSequence) {
+                info = unmarshalTaggedSequence(info, (TaggedSequence) type, klass, reader);
+            }
             else if (type instanceof Choice) {
                 info = unmarshalChoice(info, (Choice) type, klass, reader);
             }
@@ -164,6 +168,22 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalSequence(T info, Sequence sequence, Class<T> klass,
+        BitStreamReader reader) throws IOException {
+        log.debug("unmarshalling sequence {}", sequence.getName());
+        evaluator.pushStack();
+        try {
+            for (SequenceElement element : sequence.getElement()) {
+                unmarshalSequenceField(info, klass, element, reader);
+            }
+        }
+        finally {
+            evaluator.clearVariable("$length");
+            evaluator.popStack();
+        }
+        return info;
+    }
+
+    private <T> T unmarshalTaggedSequence(T info, TaggedSequence sequence, Class<T> klass,
         BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence {}", sequence.getName());
         evaluator.pushStack();

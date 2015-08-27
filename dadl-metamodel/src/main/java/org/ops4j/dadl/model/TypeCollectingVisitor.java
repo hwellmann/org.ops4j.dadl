@@ -25,6 +25,7 @@ import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
+import org.ops4j.dadl.metamodel.gen.TaggedSequence;
 import org.ops4j.dadl.metamodel.gen.visitor.BaseVisitor;
 import org.ops4j.dadl.metamodel.gen.visitor.VisitorAction;
 
@@ -47,6 +48,15 @@ public class TypeCollectingVisitor extends BaseVisitor {
 
     @Override
     public VisitorAction enter(Sequence sequence) {
+        Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
+        if (present != null) {
+            throw new IllegalArgumentException("duplicate type " + sequence.getName());
+        }
+        return VisitorAction.CONTINUE;
+    }
+
+    @Override
+    public VisitorAction enter(TaggedSequence sequence) {
         Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
         if (present != null) {
             throw new IllegalArgumentException("duplicate type " + sequence.getName());

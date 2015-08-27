@@ -35,6 +35,7 @@ import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.metamodel.gen.Sequence;
 import org.ops4j.dadl.metamodel.gen.SequenceElement;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
+import org.ops4j.dadl.metamodel.gen.TaggedSequence;
 import org.ops4j.dadl.model.ValidatedModel;
 
 import com.sun.codemodel.JBlock;
@@ -103,6 +104,7 @@ public class JavaModelGenerator {
 
         Model rawModel = model.getModel();
         rawModel.getEnumeration().stream().forEach(e -> fillEnumeration(e));
+        rawModel.getTaggedSequence().stream().forEach(s -> fillTaggedSequencePojo(s));
         rawModel.getSequence().stream().forEach(s -> fillSequencePojo(s));
         rawModel.getChoice().stream().forEach(s -> fillChoicePojo(s));
 
@@ -116,6 +118,10 @@ public class JavaModelGenerator {
             JDefinedClass klass = null;
             if (type instanceof Sequence) {
                 Sequence sequence = (Sequence) type;
+                klass = pkg._class(sequence.getName());
+            }
+            else if (type instanceof TaggedSequence) {
+                TaggedSequence sequence = (TaggedSequence) type;
                 klass = pkg._class(sequence.getName());
             }
             else if (type instanceof Choice) {
@@ -172,6 +178,11 @@ public class JavaModelGenerator {
     }
 
     private void fillSequencePojo(Sequence sequence) {
+        JDefinedClass klass = pkg._getClass(sequence.getName());
+        sequence.getElement().forEach(e -> generateSequenceFieldAndAccessors(klass, e));
+    }
+
+    private void fillTaggedSequencePojo(TaggedSequence sequence) {
         JDefinedClass klass = pkg._getClass(sequence.getName());
         sequence.getElement().forEach(e -> generateSequenceFieldAndAccessors(klass, e));
     }
