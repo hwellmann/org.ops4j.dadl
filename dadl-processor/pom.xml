@@ -8,7 +8,9 @@
     </parent>
     <groupId>org.ops4j.dadl</groupId>
     <artifactId>dadl-processor</artifactId>
-
+    
+    <name>OPS4J DADL Processors</name>
+    
     <dependencies>
         <dependency>
             <groupId>org.ops4j.dadl</groupId>

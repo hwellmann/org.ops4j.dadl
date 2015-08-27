@@ -9,6 +9,8 @@
     <groupId>org.ops4j.dadl</groupId>
     <artifactId>dadl-metamodel</artifactId>
 
+    <name>OPS4J DADL Metamodel</name>
+    
     <build>
         <plugins>
             <plugin>

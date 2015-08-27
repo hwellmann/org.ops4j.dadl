@@ -9,6 +9,8 @@
     <groupId>org.ops4j.dadl</groupId>
     <artifactId>dadl-generator</artifactId>
 
+    <name>OPS4J DADL Java Code Generator</name>
+    
     <dependencies>
         <dependency>
             <groupId>org.ops4j.dadl</groupId>
