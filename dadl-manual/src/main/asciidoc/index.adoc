@@ -55,13 +55,14 @@ does not depend on any given model.
 == Types and content types
 
 DADL is used to model data types. A *type* is either a simple type or a complex type. A *complex 
-type* is composed *elements* of other types, simple or complex. A *simple type* cannot be 
+type* is composed of *elements* of other types, simple or complex. A *simple type* cannot be 
 decomposed further.
 
-A DADL model is a set of types.
+A DADL *model* is a set of types.
 
-In a given DADL model, each type has a name, a content type and a representation. Roughly speaking, 
-the content type defines what a type _is_, and the representation defines what it _looks like_.
+In a given DADL model, each type has a unique name, a content type and a representation. 
+Roughly speaking, the content type defines what a type _is_, and the representation defines 
+what it _looks like_.
 
 The content type of a simple type is one of `integer`, `text` or `opaque`. The values of integer
 types are whole numbers, positive, negative or zero. The values of text types are strings of Unicode
@@ -81,7 +82,8 @@ each bit is either zero or one. The size or length of a bit stream is the number
 sequence. The bits of a bit stream of length n are numbered from 0 to n-1.
 Bit 0 comes first, bit n-1 comes last. This number is also called *bit position*.
 
-The values of an opaque content type are just bit streams,
+The values of an opaque content type are just bit streams, which amounts to saying that an opaque
+value does not possess any semantic interpretation.
 
 A *byte stream* is a special case of a bit stream with length divisible by 8. Thus, the sequence
 of bits can be split into subsequences of 8 bits. Each such subsequence is called a *byte* or 
@@ -90,7 +92,29 @@ by 8. The bytes of a byte stream of length n are numbered from 0 to n-1. This nu
 called *byte position*. The bits of the byte at position k have positions 8k, 8k+1, ..., 8k+7 in the
 underlying bit stream.
 
-== Complex Types
+= Representation properties
+
+The concrete representation of a DADL type is defined by a number of *representation properties*.
+A type may reference another base type. In this case, any property not explicitly redefined on the 
+referencing type is inherited from the base type. 
+
+== Length
+
+The length of a type (or more precisely, the length of each of its value representations) 
+is determined by the properties `lengthKind`, `lengthUnit`, `length` and `minLength`.
+
+The length is measured in a `lengthUnit` of `bit`, `byte` or `char`. Character length `char` only
+applies to text types.
+
+Types with a `minLength` property will be padded to this length when their actual length is shorter
+than the `minLength` value.
+
+The `lengthKind` is either `explicit` or `implicit`. An explicit length is defined by the `length`
+property on the given type. Simple types have explicit length. Complex types may have implicit
+length, which means that the length of the complex value is defined by the total length of its
+elements, including tags and length fields.          
+
+== Complex types
 
 A complex type is either a sequence, a tagged sequence or a choice.
 
@@ -115,7 +139,17 @@ significant. The content type of a choice is the union of the content types of t
 A choice value is a value of exactly one of the element types. The representation of the choice
 value is just the representation of the given element value.
  
+== Simple types
 
+=== Integer types
+
+
+
+=== Text types
+
+=== Opaque types
+
+=== Enumerations
 
 // Return to normal title levels 
 :leveloffset: 0
