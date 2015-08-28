@@ -54,7 +54,7 @@ public class SimpleTypeReader {
     <T> T readEnumerationValue(Enumeration enumeration, Element element, Class<T> klass,
         BitStreamReader reader) throws IOException {
         log.debug("reading simple value of type {}", enumeration.getName());
-        Object info = context.readValueViaAdapter(enumeration, Object.class, reader);
+        Object info = context.readValueViaAdapter(enumeration, reader);
         if (info != null) {
             return (T) info;
         }
@@ -77,7 +77,7 @@ public class SimpleTypeReader {
     <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass,
         BitStreamReader reader) throws IOException {
         log.debug("reading simple value of type {}", simpleType.getName());
-        Object info = context.readValueViaAdapter(simpleType, Object.class, reader);
+        Object info = context.readValueViaAdapter(simpleType, reader);
         if (info != null) {
             return (T) info;
         }

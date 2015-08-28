@@ -110,7 +110,7 @@ public class Unmarshaller {
     private <T> T unmarshal(DadlType type, Class<T> klass, BitStreamReader reader)
         throws IOException {
         long startPos = reader.getBitPosition();
-        T info = context.readValueViaAdapter(type, klass, reader);
+        T info = context.readValueViaAdapter(type, reader);
         if (info == null) {
             info = newInstance(klass);
             evaluator.setSelf(info);

@@ -125,7 +125,7 @@ public class DadlContext {
     }
 
 
-    <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)
+    <T> T readValueViaAdapter(DadlType type, BitStreamReader reader)
         throws IOException {
         DadlAdapter<T> adapter = getAdapter(type);
         if (adapter == null) {
