@@ -89,10 +89,10 @@ public class Marshaller {
         long startPos = writer.getBitPosition();
         if (!context.writeValueViaAdapter(type, info, writer)) {
             if (type instanceof Sequence) {
-                marshalSequence(info, (Sequence) type, writer);
+                marshalSequence((Sequence) type, writer);
             }
             else if (type instanceof TaggedSequence) {
-                marshalTaggedSequence(info, (TaggedSequence) type, writer);
+                marshalTaggedSequence((TaggedSequence) type, writer);
             }
             else if (type instanceof Choice) {
                 marshalChoice(info, (Choice) type, writer);
@@ -149,7 +149,7 @@ public class Marshaller {
      * @param writer
      * @throws IOException
      */
-    private void marshalSequence(Object info, Sequence sequence, BitStreamWriter writer)
+    private void marshalSequence(Sequence sequence, BitStreamWriter writer)
         throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
@@ -161,7 +161,7 @@ public class Marshaller {
         }
     }
 
-    private void marshalTaggedSequence(Object info, TaggedSequence sequence, BitStreamWriter writer)
+    private void marshalTaggedSequence(TaggedSequence sequence, BitStreamWriter writer)
         throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
