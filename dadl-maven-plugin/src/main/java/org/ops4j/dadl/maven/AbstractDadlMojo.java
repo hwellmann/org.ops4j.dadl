@@ -83,8 +83,7 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
         try {
             JAXBContext context = JAXBContext.newInstance(Model.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            Model jaxbModel = (Model) unmarshaller.unmarshal(model);
-            return jaxbModel;
+            return (Model) unmarshaller.unmarshal(model);
         }
         catch (JAXBException exc) {
             throw new MojoFailureException("error parsing DADL model", exc);
@@ -95,7 +94,7 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
 
     /**
      * Gets the package name for the generated sources.
-     * 
+     *
      * @return the package name
      */
     public String getPackage() {
@@ -104,12 +103,11 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
 
     /**
      * Gets the package name for the generated sources.
-     * 
+     *
      * @param packageName
      *            the genPackage to set
      */
     public void setPackage(String packageName) {
         this.packageName = packageName;
     }
-
 }

@@ -282,7 +282,7 @@ public class Marshaller {
     private void marshalSequenceField(Object info, SequenceElement element, BitStreamWriter writer)
         throws IOException {
         if (model.isList(element)) {
-            marshalSequenceListField(info, element, writer);
+            marshalSequenceListField(element, writer);
         }
         else {
             Object fieldInfo = evaluator.getParentProperty(element.getName());
@@ -312,7 +312,7 @@ public class Marshaller {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void marshalSequenceListField(Object info, SequenceElement element,
+    private void marshalSequenceListField(SequenceElement element,
         BitStreamWriter writer) throws IOException {
         log.debug("marshalling list field {}", element.getName());
         List<Object> items = (List<Object>) evaluator.getParentProperty(element.getName());

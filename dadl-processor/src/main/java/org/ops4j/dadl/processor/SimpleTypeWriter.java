@@ -61,16 +61,16 @@ public class SimpleTypeWriter {
     void marshalSimpleField(Object fieldInfo, Element element, SimpleType type,
         BitStreamWriter writer) throws IOException {
         log.debug("writing simple value of type {}", type.getName());
-        Object calculatedValue = calculateValue(fieldInfo, element, type);
+        Object calculatedValue = calculateValue(fieldInfo, element);
         switch (type.getContentType()) {
             case INTEGER:
                 marshalIntegerField(calculatedValue, element, type, writer);
                 break;
             case TEXT:
-                marshalTextField(calculatedValue, element, type, writer);
+                marshalTextField(calculatedValue, element, writer);
                 break;
             case OPAQUE:
-                marshalOpaqueField(calculatedValue, element, type, writer);
+                marshalOpaqueField(calculatedValue, element, writer);
                 break;
             default:
                 throw new UnsupportedOperationException("unsupported content type: "
@@ -92,7 +92,7 @@ public class SimpleTypeWriter {
      * @param type
      * @return
      */
-    private Object calculateValue(Object fieldInfo, Element element, SimpleType type) {
+    private Object calculateValue(Object fieldInfo, Element element) {
         if (element instanceof SequenceElement) {
             SequenceElement seqElem = (SequenceElement) element;
             String expr = seqElem.getOutputValueCalc();
@@ -120,8 +120,8 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void marshalTextField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
+    private void marshalTextField(Object fieldInfo, Element element, BitStreamWriter writer)
+        throws IOException {
         if (fieldInfo instanceof String) {
             String text = (String) fieldInfo;
             long length = evaluator.computeLength(element);
@@ -133,8 +133,8 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void marshalOpaqueField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
+    private void marshalOpaqueField(Object fieldInfo, Element element, BitStreamWriter writer)
+        throws IOException {
         if (fieldInfo instanceof byte[]) {
             byte[] bytes = (byte[]) fieldInfo;
             long length = evaluator.computeLength(element);

@@ -52,7 +52,6 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
-import com.sun.codemodel.writer.FileCodeWriter;
 
 /**
  * Generates Java source files from a given model. There will be one POJO for each complex type and
@@ -109,8 +108,7 @@ public class JavaModelGenerator {
         rawModel.getChoice().stream().forEach(s -> fillChoicePojo(s));
 
         outputDir.toFile().mkdirs();
-        codeModel.build(new FileCodeWriter(outputDir.toFile()));
-        //codeModel.build(outputDir.toFile());
+        codeModel.build(outputDir.toFile());
     }
 
     private void createType(Object type) {
@@ -148,11 +146,10 @@ public class JavaModelGenerator {
         enumeration.getElement().forEach(e -> generateEnumerationElement(klass, e));
         generateEnumerationFieldAndGetter(klass, jtype);
         generateEnumerationConstructor(klass, jtype);
-        generateEnumerationFromValueMethod(enumeration, klass, jtype);
+        generateEnumerationFromValueMethod(klass, jtype);
     }
 
-    private void generateEnumerationFromValueMethod(Enumeration enumeration, JDefinedClass klass,
-        JType jtype) {
+    private void generateEnumerationFromValueMethod(JDefinedClass klass, JType jtype) {
         JMethod method = klass.method(JMod.PUBLIC | JMod.STATIC, klass, "fromValue");
         JVar valueParam = method.param(jtype, "value");
         JBlock methodBody = method.body();
@@ -261,8 +258,7 @@ public class JavaModelGenerator {
             return codeModel.parseType(simpleType.getMappedType());
         }
         catch (ClassNotFoundException exc) {
-            // TODO Auto-generated catch block
-            throw new IllegalArgumentException(simpleType.getMappedType());
+            throw new IllegalArgumentException(simpleType.getMappedType(), exc);
         }
     }
 

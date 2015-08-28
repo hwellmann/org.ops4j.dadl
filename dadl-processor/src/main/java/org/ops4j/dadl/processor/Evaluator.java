@@ -41,7 +41,10 @@ import org.ops4j.dadl.metamodel.gen.TestKind;
  * @author hwellmann
  *
  */
-public class Evaluator {
+public final class Evaluator {
+
+    public static final String UP = "up";
+    public static final String SELF = "self";
 
     private List<Object> infoStack;
     private ELProcessor processor;
@@ -52,7 +55,7 @@ public class Evaluator {
     public Evaluator() {
         this.infoStack = new ArrayList<>();
         this.processor = new ELProcessor();
-        processor.setValue("up", infoStack);
+        processor.setValue(UP, infoStack);
         pushStack();
     }
 
@@ -65,7 +68,7 @@ public class Evaluator {
      */
     public void pushStack(Object info) {
         infoStack.add(0, info);
-        processor.setValue("self", info);
+        processor.setValue(SELF, info);
     }
 
     /**
@@ -73,12 +76,12 @@ public class Evaluator {
      */
     public void pushStack() {
         infoStack.add(0, null);
-        processor.setValue("self", null);
+        processor.setValue(SELF, null);
     }
 
     public void setSelf(Object info) {
         infoStack.set(0, info);
-        processor.setValue("self", info);
+        processor.setValue(SELF, info);
     }
 
     public Object setSelfEnumeration(Object info, Class<?> klass) {
@@ -124,7 +127,7 @@ public class Evaluator {
     public void popStack() {
         infoStack.remove(0);
         if (!infoStack.isEmpty()) {
-            processor.setValue("self", infoStack.get(0));
+            processor.setValue(SELF, infoStack.get(0));
         }
     }
 

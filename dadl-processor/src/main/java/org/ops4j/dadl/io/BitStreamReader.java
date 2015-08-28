@@ -34,8 +34,7 @@ public abstract class BitStreamReader extends ImageInputStreamImpl {
     private ByteBuffer buffer = ByteBuffer.allocate(2048);
 
     public long getBitPosition() {
-        long pos = 8 * streamPos + bitOffset;
-        return pos;
+        return 8 * streamPos + bitOffset;
     }
 
     public void setBitPosition(long pos) throws IOException {
@@ -170,13 +169,13 @@ public abstract class BitStreamReader extends ImageInputStreamImpl {
         buffer.rewind();
         while (true) {
             byte characterByte = this.readByte();
-            if (characterByte == 0)
+            if (characterByte == 0) {
                 break;
+            }
             buffer.put(characterByte);
         }
         byte[] bytes = Arrays.copyOf(buffer.array(), buffer.position());
-        String result = new String(bytes, StandardCharsets.UTF_8);
-        return result;
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public void skipBits(long bitCnt) throws IOException {

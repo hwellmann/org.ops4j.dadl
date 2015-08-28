@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
+import org.ops4j.dadl.exc.Exceptions;
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
@@ -160,11 +161,10 @@ public class Unmarshaller {
 
     private <T> T newInstance(Class<T> klass) {
         try {
-            T info = klass.newInstance();
-            return info;
+            return klass.newInstance();
         }
         catch (InstantiationException | IllegalAccessException exc) {
-            throw new UnmarshalException("cannot instantiate " + klass.getName());
+            throw new UnmarshalException("cannot instantiate " + klass.getName(), exc);
         }
     }
 
@@ -267,8 +267,7 @@ public class Unmarshaller {
             }
         }
         catch (NoSuchFieldException | SecurityException exc) {
-            // TODO Auto-generated catch block
-            exc.printStackTrace();
+            throw Exceptions.unchecked(exc);
         }
     }
 
@@ -276,10 +275,10 @@ public class Unmarshaller {
         BitStreamReader reader) throws IOException {
         switch (element.getOccursCountKind()) {
             case EXPRESSION:
-                unmarshalSequenceListFieldByExpression(info, klass, element, reader);
+                unmarshalSequenceListFieldByExpression(klass, element, reader);
                 break;
             case PARSED:
-                unmarshalSequenceListFieldParsed(info, klass, element, reader);
+                unmarshalSequenceListFieldParsed(klass, element, reader);
                 break;
             default:
                 throw new UnsupportedOperationException(element.getOccursCountKind().toString());
@@ -287,7 +286,7 @@ public class Unmarshaller {
         }
     }
 
-    private void unmarshalSequenceListFieldByExpression(Object info, Class<?> klass, SequenceElement element,
+    private void unmarshalSequenceListFieldByExpression(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
         Long numItems = evaluator.evaluate(element.getOccursCount(), Long.class);
 
@@ -300,7 +299,7 @@ public class Unmarshaller {
         }
     }
 
-    private void unmarshalSequenceListFieldParsed(Object info, Class<?> klass, SequenceElement element,
+    private void unmarshalSequenceListFieldParsed(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
 
         @SuppressWarnings("unchecked")
@@ -365,8 +364,7 @@ public class Unmarshaller {
                         reader.reset();
                     }
                     catch (IOException exc1) {
-                        // TODO Auto-generated catch block
-                        exc1.printStackTrace();
+                        throw Exceptions.unchecked(exc1);
                     }
                 }
             }

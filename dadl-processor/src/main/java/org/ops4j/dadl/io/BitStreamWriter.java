@@ -38,8 +38,7 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
     }
 
     public long getBitPosition() {
-        long pos = 8 * streamPos + bitOffset;
-        return pos;
+        return 8 * streamPos + bitOffset;
     }
 
     public void setBitPosition(long pos) throws IOException {
@@ -67,8 +66,9 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
             super.writeBytes(value);
         }
         else {
-            for (int i = 0; i < value.length(); i++)
+            for (int i = 0; i < value.length(); i++) {
                 writeBits(value.charAt(i), 8);
+            }
         }
     }
 
@@ -170,8 +170,9 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
             newPosition = ((bitPosition / alignVal) + 1) * alignVal;
             long bytesToWrite = (newPosition - bitPosition) / 8;
             if (bytesToWrite > 0) {
-                if ((newPosition - bitPosition) % 8 != 0)
+                if ((newPosition - bitPosition) % 8 != 0)  {
                     bytesToWrite++;
+                }
                 byte b[] = new byte[(int) bytesToWrite];
                 this.write(b, 0, b.length);
             }
