@@ -52,6 +52,7 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import com.sun.codemodel.writer.FileCodeWriter;
 
 /**
  * Generates Java source files from a given model. There will be one POJO for each complex type and
@@ -108,7 +109,7 @@ public class JavaModelGenerator {
         rawModel.getChoice().stream().forEach(s -> fillChoicePojo(s));
 
         outputDir.toFile().mkdirs();
-        codeModel.build(outputDir.toFile());
+        codeModel.build(new FileCodeWriter(outputDir.toFile()));
     }
 
     private void createType(Object type) {
