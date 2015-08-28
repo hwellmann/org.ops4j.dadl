@@ -241,7 +241,7 @@ public final class Evaluator {
         return infoStack.toString();
     }
 
-    void checkDiscriminator(Object value, DadlType type) {
+    void checkDiscriminator(DadlType type) {
         if (type == null) {
             return;
         }

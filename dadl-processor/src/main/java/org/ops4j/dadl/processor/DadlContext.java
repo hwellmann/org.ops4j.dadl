@@ -112,7 +112,7 @@ public class DadlContext {
      * @return adapter, or null if no adapter is defined for this type
      */
     @SuppressWarnings("unchecked")
-    public <T> DadlAdapter<T> getAdapter(DadlType type, Class<T> klass) {
+    public <T> DadlAdapter<T> getAdapter(DadlType type) {
         String adapterName = type.getAdapter();
         if (adapterName == null) {
             return null;
@@ -127,7 +127,7 @@ public class DadlContext {
 
     <T> T readValueViaAdapter(DadlType type, Class<T> klass, BitStreamReader reader)
         throws IOException {
-        DadlAdapter<T> adapter = getAdapter(type, klass);
+        DadlAdapter<T> adapter = getAdapter(type);
         if (adapter == null) {
             return null;
         }
@@ -137,7 +137,7 @@ public class DadlContext {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     boolean writeValueViaAdapter(DadlType type, Object info, BitStreamWriter writer)
         throws IOException {
-        DadlAdapter adapter = getAdapter(type, info.getClass());
+        DadlAdapter adapter = getAdapter(type);
         if (adapter == null) {
             return false;
         }

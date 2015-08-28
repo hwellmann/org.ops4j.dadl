@@ -17,6 +17,7 @@
  */
 package org.ops4j.dadl.generator;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -108,8 +109,14 @@ public class JavaModelGenerator {
         rawModel.getSequence().stream().forEach(s -> fillSequencePojo(s));
         rawModel.getChoice().stream().forEach(s -> fillChoicePojo(s));
 
-        outputDir.toFile().mkdirs();
-        codeModel.build(new FileCodeWriter(outputDir.toFile()));
+        File dir = outputDir.toFile();
+        if (!dir.exists()) {
+            boolean created = dir.mkdirs();
+            if (!created) {
+                throw new IOException("could not create " + dir);
+            }
+        }
+        codeModel.build(new FileCodeWriter(dir));
     }
 
     private void createType(Object type) {

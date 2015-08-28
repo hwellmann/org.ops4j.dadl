@@ -69,7 +69,7 @@ public class SimpleTypeReader {
                 throw new UnsupportedOperationException(enumeration.getContentType().toString());
         }
         info = evaluator.setSelfEnumeration(info, klass);
-        evaluator.checkDiscriminator(info, element);
+        evaluator.checkDiscriminator(element);
         return (T) info;
     }
 
@@ -95,7 +95,7 @@ public class SimpleTypeReader {
                 throw new UnsupportedOperationException(simpleType.getContentType().toString());
         }
         evaluator.setSelf(info);
-        evaluator.checkDiscriminator(info, element);
+        evaluator.checkDiscriminator(element);
         return (T) info;
     }
 
