@@ -50,9 +50,71 @@ build process. The generated model only contains simple beans and enums. The mar
 and unmarshalling logic is not contained in the generated code, but in a DADL runtime library which
 does not depend on any given model.
 
-= The Metamodel
+= Concepts
 
+== Types and content types
 
+DADL is used to model data types. A *type* is either a simple type or a complex type. A *complex 
+type* is composed *elements* of other types, simple or complex. A *simple type* cannot be 
+decomposed further.
+
+A DADL model is a set of types.
+
+In a given DADL model, each type has a name, a content type and a representation. Roughly speaking, 
+the content type defines what a type _is_, and the representation defines what it _looks like_.
+
+The content type of a simple type is one of `integer`, `text` or `opaque`. The values of integer
+types are whole numbers, positive, negative or zero. The values of text types are strings of Unicode
+characters, where Unicode just defines the set of available characters, and not their encoding. The
+encoding is defined by the representation of a DADL type. An opaque type is just a container that
+cannot be interpreted in the context of the given model.
+
+For example, consider a simple type `Age` with content type `integer` and representation _16-bit
+unsigned integer, big-endian_. Alternatively, the representation might be _5-digit decimal ASCII
+string_.
+
+== Values and bit stream representations
+
+A type can be regarded as a set of its possible *values*. In a given DADL model, each value has
+a _unique_ representation as a *bit stream*. A bit stream is a finite sequence of *bits*, where
+each bit is either zero or one. The size or length of a bit stream is the number of bits in the
+sequence. The bits of a bit stream of length n are numbered from 0 to n-1.
+Bit 0 comes first, bit n-1 comes last. This number is also called *bit position*.
+
+The values of an opaque content type are just bit streams,
+
+A *byte stream* is a special case of a bit stream with length divisible by 8. Thus, the sequence
+of bits can be split into subsequences of 8 bits. Each such subsequence is called a *byte* or 
+*octet*. The length of a byte stream is the number of bytes, equal to the number of bits divided
+by 8. The bytes of a byte stream of length n are numbered from 0 to n-1. This number is also
+called *byte position*. The bits of the byte at position k have positions 8k, 8k+1, ..., 8k+7 in the
+underlying bit stream.
+
+== Complex Types
+
+A complex type is either a sequence, a tagged sequence or a choice.
+
+A *sequence* has zero or more elements, each with a name and a type. The order of the elements
+is significant. The content type of a sequence type is the Cartesian product of the content types
+of the element types in the given order.
+
+A sequence value is a tuple of element values. The representation of the sequence value is the
+concatenation of the representations of the element values in the given order.
+
+A *tagged sequence* is a sequence preceded by a tag and a length field. The tag has an integer
+type and a fixed value. The length field has an integer type. The value of this type is the total 
+byte length of the elements of the tagged sequence, by default not counting the tag and the length 
+field itself.
+
+The representation of a tagged sequence is the concatenation of the tag value representation, the 
+length field value representation and the element values representation in the given order.
+
+A *choice* has one or more elements, each with a name and a type. The order of the elements is
+significant. The content type of a choice is the union of the content types of the element types.
+
+A choice value is a value of exactly one of the element types. The representation of the choice
+value is just the representation of the given element value.
+ 
 
 
 // Return to normal title levels 
