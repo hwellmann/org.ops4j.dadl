@@ -154,7 +154,7 @@ public class Marshaller {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
-            marshalSequencePayload(info, sequence, writer);
+            marshalSequencePayload(sequence, writer);
         }
         finally {
             evaluator.popStack();
@@ -172,11 +172,11 @@ public class Marshaller {
             }
             LengthField lengthField = sequence.getLengthField();
             if (lengthField == null) {
-                marshalTaggedSequencePayload(info, sequence, writer);
+                marshalTaggedSequencePayload(sequence, writer);
             }
             else {
                 ByteArrayBitStreamWriter payloadWriter = new ByteArrayBitStreamWriter();
-                marshalTaggedSequencePayload(info, sequence, payloadWriter);
+                marshalTaggedSequencePayload(sequence, payloadWriter);
                 long numPayloadBits = payloadWriter.getBitPosition();
                 marshalLengthField(lengthField, numPayloadBits, writer);
                 if (payloadWriter.getBitOffset() == 0) {
@@ -265,21 +265,21 @@ public class Marshaller {
         return Long.parseUnsignedLong(tag.getHexValue(), 16);
     }
 
-    private void marshalSequencePayload(Object info, Sequence sequence, BitStreamWriter writer)
+    private void marshalSequencePayload(Sequence sequence, BitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
-            marshalSequenceField(info, element, writer);
+            marshalSequenceField(element, writer);
         }
     }
 
-    private void marshalTaggedSequencePayload(Object info, TaggedSequence sequence, BitStreamWriter writer)
+    private void marshalTaggedSequencePayload(TaggedSequence sequence, BitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
-            marshalSequenceField(info, element, writer);
+            marshalSequenceField(element, writer);
         }
     }
 
-    private void marshalSequenceField(Object info, SequenceElement element, BitStreamWriter writer)
+    private void marshalSequenceField(SequenceElement element, BitStreamWriter writer)
         throws IOException {
         if (model.isList(element)) {
             marshalSequenceListField(element, writer);

@@ -74,7 +74,11 @@ public class ByteArrayBitStreamReader extends BitStreamReader {
         }
         bitOffset = 0;
         bais.reset();
-        bais.skip(pos);
+        long numBytes = bais.skip(pos);
+        if (numBytes != pos) {
+            throw new IOException("could not skip requested number of bytes: " + pos);
+        }
+
         streamPos = pos;
     }
 }

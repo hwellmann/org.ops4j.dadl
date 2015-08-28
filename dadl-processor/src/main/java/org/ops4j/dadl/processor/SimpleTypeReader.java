@@ -167,8 +167,7 @@ public class SimpleTypeReader {
         BitStreamReader reader) throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(element);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
+            byte[] bytes = readBytes(reader, length);
             String s = new String(bytes, StandardCharsets.UTF_8);
             return convertLong(Long.parseLong(s), klass);
         }
@@ -179,8 +178,7 @@ public class SimpleTypeReader {
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
+            byte[] bytes = readBytes(reader, length);
             try {
                 return new String(bytes, representation.getEncoding());
             }
@@ -191,12 +189,27 @@ public class SimpleTypeReader {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * @param reader
+     * @param length
+     * @return
+     * @throws IOException
+     */
+    private byte[] readBytes(BitStreamReader reader, long length) throws IOException {
+        byte[] bytes = new byte[(int) length];
+        int numBytes = reader.read(bytes);
+        if (numBytes < length) {
+            String msg = String.format("expected %d bytes, read %d bytes", length, numBytes);
+            throw new UnmarshalException(msg);
+        }
+        return bytes;
+    }
+
     byte[] readOpaqueValue(SimpleType type, DadlType representation, BitStreamReader reader)
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);
-            byte[] bytes = new byte[(int) length];
-            reader.read(bytes);
+            byte[] bytes = readBytes(reader, length);
             return bytes;
         }
         throw new UnsupportedOperationException();

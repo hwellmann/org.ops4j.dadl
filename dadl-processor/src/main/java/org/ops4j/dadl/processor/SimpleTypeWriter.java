@@ -249,6 +249,8 @@ public class SimpleTypeWriter {
                     leftPadding++;
                 }
                 break;
+            default:
+                throw new IllegalArgumentException(justification.toString());
         }
         for (int i = 0; i < leftPadding; i++) {
             writer.writeBytes(padCharacter);

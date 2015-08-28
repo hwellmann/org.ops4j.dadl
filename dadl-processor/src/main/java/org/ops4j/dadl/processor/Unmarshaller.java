@@ -174,7 +174,7 @@ public class Unmarshaller {
         evaluator.pushStack();
         try {
             for (SequenceElement element : sequence.getElement()) {
-                unmarshalSequenceField(info, klass, element, reader);
+                unmarshalSequenceField(klass, element, reader);
             }
         }
         finally {
@@ -199,7 +199,7 @@ public class Unmarshaller {
                 evaluator.setVariable("$length", length);
             }
             for (SequenceElement element : sequence.getElement()) {
-                unmarshalSequenceField(info, klass, element, reader);
+                unmarshalSequenceField(klass, element, reader);
             }
         }
         finally {
@@ -249,7 +249,7 @@ public class Unmarshaller {
         return Long.parseUnsignedLong(tag.getHexValue(), 16);
     }
 
-    private void unmarshalSequenceField(Object info, Class<?> klass, SequenceElement element,
+    private void unmarshalSequenceField(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence element {}", element.getName());
         try {
@@ -257,12 +257,12 @@ public class Unmarshaller {
             if (model.isList(element)) {
                 ParameterizedType type = (ParameterizedType) field.getGenericType();
                 Class<?> elementClass = (Class<?>) type.getActualTypeArguments()[0];
-                unmarshalSequenceListField(info, elementClass, element, reader);
+                unmarshalSequenceListField(elementClass, element, reader);
             }
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
                     reader);
-                checkDiscriminator(fieldValue, element);
+                checkDiscriminator(element);
                 evaluator.setParentProperty(element.getName(), fieldValue);
             }
         }
@@ -271,7 +271,7 @@ public class Unmarshaller {
         }
     }
 
-    private void unmarshalSequenceListField(Object info, Class<?> klass, SequenceElement element,
+    private void unmarshalSequenceListField(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
         switch (element.getOccursCountKind()) {
             case EXPRESSION:
@@ -352,7 +352,7 @@ public class Unmarshaller {
                     }
                     else {
                         fieldValue = unmarshal(fieldType, field.getType(), reader);
-                        checkDiscriminator(fieldValue, element);
+                        checkDiscriminator(element);
                     }
                     evaluator.setParentProperty(fieldName, fieldValue);
                     branchMatched = true;
@@ -378,7 +378,7 @@ public class Unmarshaller {
         }
     }
 
-    private void checkDiscriminator(Object value, DadlType type) {
+    private void checkDiscriminator(DadlType type) {
         if (type == null) {
             return;
         }
