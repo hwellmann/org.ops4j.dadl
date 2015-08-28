@@ -33,6 +33,8 @@
 
     <xs:attributeGroup name="BinaryRepresentationAttributes">
         <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation" default="binary"/>
+        <xs:attribute name="byteOrder" type="ByteOrder" default="bigEndian"/>
+        <xs:attribute name="bitOrder" type="BitOrder" default="mostSignificantBitFirst"/>
         <xs:attribute name="fillByte" type="xs:int" />
     </xs:attributeGroup>
 
@@ -128,6 +130,20 @@
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="binary" />
             <xs:enumeration value="bcd" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="ByteOrder">
+        <xs:restriction base="xs:NCName">
+            <xs:enumeration value="bigEndian" />
+            <xs:enumeration value="littleEndian" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="BitOrder">
+        <xs:restriction base="xs:NCName">
+            <xs:enumeration value="mostSignificantBitFirst" />
+            <xs:enumeration value="leastSignificantBitFirst" />
         </xs:restriction>
     </xs:simpleType>
 
