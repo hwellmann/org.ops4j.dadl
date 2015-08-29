@@ -92,7 +92,7 @@ by 8. The bytes of a byte stream of length n are numbered from 0 to n-1. This nu
 called *byte position*. The bits of the byte at position k have positions 8k, 8k+1, ..., 8k+7 in the
 underlying bit stream.
 
-= Representation properties
+== Representation properties
 
 The concrete representation of a DADL type is defined by a number of *representation properties*.
 A type may reference another base type. In this case, any property not explicitly redefined on the 
@@ -114,9 +114,90 @@ property on the given type. Simple types have explicit length. Complex types may
 length, which means that the length of the complex value is defined by the total length of its
 elements, including tags and length fields.          
 
+== Simple types
+
+Each simple type has a `contentType` property with a value of `integer`, `text` or `opaque`.
+Additional properties for each content type are defined in the following sections.
+
+The `mappedType` property defines the type to be used in the target language model.
+
+=== Integer types
+
+Integer type can be represented as binary or as text. For Java, the `mappedType` must be one of 
+`byte`, `short`, `int`, `long`, `Byte`, `Short`, `Integer`, `Long` or `BigInteger`.
+
+Binary representation has two more variant defined by the `binaryNumberRepresentation` property
+with values of `binary` or `bcd`. 
+
+`binary` representation is the usual two's complement number representation, further determined by 
+the values of the `byteOrder` and `bitOrder` properties.
+
+For example, the decimal number 261 can be written as 2⁸ + 2² + 2⁰, so its binary representation is
+`0000 0001 0000 0101`. This corresponds to the default bit stream representation with `byteOrder =
+bigEndian` and `bitOrder = mostSignificantBitFirst`.
+
+`littleEndian` reverses the order of bytes in the byte stream, and `leastSignificantFirst` reverses
+the order of bits within a byte.
+
+So the four possible combinations of byte order and bit order result in the following representations:
+
+|===
+|*byte order*   |*bit order*                |*representation*
+|`bigEndian`    |`mostSignificantBitFirst`  |`0000 0001 0000 0101`
+|`bigEndian`    |`leastSignificantBitFirst` |`1000 0000 1010 0000`
+|`littleEndian` |`mostSignificantBitFirst`  |`0000 0101 0000 0001` 
+|`littleEndian` |`leastSignificantBitFirst` |`1010 0000 1000 0000` 
+|===
+
+In `bcd` representation, numbers are represented as binary coded decimals, where each decimal
+digit is encoded by its 4-bit binary representation, from `0000` to `1001` (i.e. zero to nine). 
+`bcd` representations are byte-aligned. For values with an odd number of digits, the most 
+significant bits of the most significant byte are filled with zero.
+
+In textual representation, numbers are written in the standard decimal representation in the 
+character encoding specified by the `encoding` property. In this case, the `lengthUnit` must be 
+`char`, indicating the number of decimal digits for the number representation
+(also counting sign and separators, if required).
+
+If the `length` value is greater than the number of characters required by the decimal
+representation, then the number representation will be padded with the value of the 
+`textNumberPadCharacter` property, usually zero or a blank space. The `textNumberJustification`
+property with possible values of `left`, `right`, `center` indicates whether the pad character
+will be added on the right, on the left or equally on both sides. For `center` justification,
+one extra character may be added on the left side if needed. 
+
+=== Text types
+
+Text values are represented in the character encoding defined by the `encoding` property. 
+The `mappedType` must be `String`. 
+
+The `textPadKind` property with value `none` or `padChar` defines whether or not the text is padded.
+
+When `textPadKind` is `none`, it is an error if the actual encoded length does not equal the 
+length specified by the `lengthUnit` and `length` properties.
+
+When `textPadKind` is `padChar`, the text will be padded, if required, by the value of the 
+`textStringPadCharacter` property, using left, right or center justification as indicated by the 
+value of the `textStringJustification` property, similar to the `textNumberJustification`
+defined above.
+
+=== Opaque types
+
+Values of opaque types are copied verbatim between the representation and the target language 
+model. The mapped type must be `byte[]`.
+
+=== Enumerations
+
+An enumeration type is a restriction of a given simple type to a finite number of elements. Each
+element has a name and a value. The name is defined by the `name` property. The value is defined
+by exactly one of the `value`, `decValue` or `hexValue` properties, defining a string value,
+a decimal number value or a hexadecimal number value, respectively.
+
 == Complex types
 
 A complex type is either a sequence, a tagged sequence or a choice.
+
+=== Sequence 
 
 A *sequence* has zero or more elements, each with a name and a type. The order of the elements
 is significant. The content type of a sequence type is the Cartesian product of the content types
@@ -125,13 +206,17 @@ of the element types in the given order.
 A sequence value is a tuple of element values. The representation of the sequence value is the
 concatenation of the representations of the element values in the given order.
 
+=== Tagged Sequence
+
 A *tagged sequence* is a sequence preceded by a tag and a length field. The tag has an integer
 type and a fixed value. The length field has an integer type. The value of this type is the total 
 byte length of the elements of the tagged sequence, by default not counting the tag and the length 
 field itself.
 
 The representation of a tagged sequence is the concatenation of the tag value representation, the 
-length field value representation and the element values representation in the given order.
+length field value representation and the element value representations in the given order.
+
+=== Choice
 
 A *choice* has one or more elements, each with a name and a type. The order of the elements is
 significant. The content type of a choice is the union of the content types of the element types.
@@ -139,17 +224,6 @@ significant. The content type of a choice is the union of the content types of t
 A choice value is a value of exactly one of the element types. The representation of the choice
 value is just the representation of the given element value.
  
-== Simple types
-
-=== Integer types
-
-
-
-=== Text types
-
-=== Opaque types
-
-=== Enumerations
 
 // Return to normal title levels 
 :leveloffset: 0
