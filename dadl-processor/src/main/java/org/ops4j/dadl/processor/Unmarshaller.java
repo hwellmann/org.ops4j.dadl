@@ -139,8 +139,8 @@ public class Unmarshaller {
             return;
         }
 
-        long numBits = hasExactLength ?
-            evaluator.computeLength(type) : evaluator.computeMinLength(type);
+        long numBits = hasExactLength ? evaluator.computeLength(type) : evaluator
+            .computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -238,7 +238,8 @@ public class Unmarshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            Long lengthValue = simpleTypeReader.readSimpleValue(simpleType, null, Long.class, reader);
+            Long lengthValue = simpleTypeReader.readSimpleValue(simpleType, null, Long.class,
+                reader);
             log.debug("unmarshalled length field with value {}", lengthValue);
             return lengthValue;
         }
@@ -322,7 +323,8 @@ public class Unmarshaller {
         AbstractBitStreamReader reader) throws IOException {
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
-            return simpleTypeReader.readEnumerationValue((Enumeration) fieldType, element, klass, reader);
+            return simpleTypeReader.readEnumerationValue((Enumeration) fieldType, element, klass,
+                reader);
         }
         else if (fieldType instanceof SimpleType) {
             return simpleTypeReader.readSimpleValue((SimpleType) fieldType, element, klass, reader);
@@ -332,7 +334,8 @@ public class Unmarshaller {
         }
     }
 
-    private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass, AbstractBitStreamReader reader) {
+    private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass,
+        AbstractBitStreamReader reader) {
         log.debug("unmarshalling choice {}", choice.getName());
         boolean branchMatched = false;
         evaluator.pushStack();
@@ -341,22 +344,7 @@ public class Unmarshaller {
                 log.debug("trying branch {}", element.getName());
                 reader.mark();
                 try {
-                    String fieldName = element.getName();
-                    Field field = klass.getDeclaredField(fieldName);
-                    DadlType fieldType = model.getType(element.getType());
-
-                    Object fieldValue;
-                    if (fieldType instanceof SimpleType) {
-                        fieldValue = simpleTypeReader.readSimpleValue((SimpleType) fieldType,
-                            element, field.getType(), reader);
-                    }
-                    else {
-                        fieldValue = unmarshal(fieldType, field.getType(), reader);
-                        checkDiscriminator(element);
-                    }
-                    evaluator.setParentProperty(fieldName, fieldValue);
-                    branchMatched = true;
-                    log.debug("matched branch {}", element.getName());
+                    branchMatched = unmarshalChoiceElement(element, klass, reader);
                     break;
                 }
                 catch (AssertionError | Exception exc) {
@@ -376,6 +364,28 @@ public class Unmarshaller {
         finally {
             evaluator.popStack();
         }
+    }
+
+    private <T> boolean unmarshalChoiceElement(Element element, Class<T> klass,
+        AbstractBitStreamReader reader) throws NoSuchFieldException, IOException {
+        boolean branchMatched;
+        String fieldName = element.getName();
+        Field field = klass.getDeclaredField(fieldName);
+        DadlType fieldType = model.getType(element.getType());
+
+        Object fieldValue;
+        if (fieldType instanceof SimpleType) {
+            fieldValue = simpleTypeReader.readSimpleValue((SimpleType) fieldType,
+                element, field.getType(), reader);
+        }
+        else {
+            fieldValue = unmarshal(fieldType, field.getType(), reader);
+            checkDiscriminator(element);
+        }
+        evaluator.setParentProperty(fieldName, fieldValue);
+        branchMatched = true;
+        log.debug("matched branch {}", element.getName());
+        return branchMatched;
     }
 
     private void checkDiscriminator(DadlType type) {

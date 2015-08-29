@@ -173,7 +173,7 @@ public class BitStreamWriter extends MemoryCacheImageOutputStream {
                 if ((newPosition - bitPosition) % 8 != 0)  {
                     bytesToWrite++;
                 }
-                byte b[] = new byte[(int) bytesToWrite];
+                byte[] b = new byte[(int) bytesToWrite];
                 this.write(b, 0, b.length);
             }
             setBitPosition(newPosition);

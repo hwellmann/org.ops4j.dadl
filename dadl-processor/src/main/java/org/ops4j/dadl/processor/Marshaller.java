@@ -112,8 +112,8 @@ public class Marshaller {
             return;
         }
 
-        long numBits = hasExactLength ?
-            evaluator.computeLength(type) : evaluator.computeMinLength(type);
+        long numBits = hasExactLength ? evaluator.computeLength(type) : evaluator
+            .computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
         }
@@ -149,8 +149,7 @@ public class Marshaller {
      * @param writer
      * @throws IOException
      */
-    private void marshalSequence(Sequence sequence, BitStreamWriter writer)
-        throws IOException {
+    private void marshalSequence(Sequence sequence, BitStreamWriter writer) throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
@@ -210,9 +209,6 @@ public class Marshaller {
             throw new UnmarshalException("length field must have simple type");
         }
     }
-
-
-
 
     private void marshalChoice(Object info, Choice choice, BitStreamWriter writer)
         throws IOException {
@@ -295,7 +291,8 @@ public class Marshaller {
         log.debug("marshalling field {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
-            simpleTypeWriter.marshalEnumerationField(fieldInfo, element, (Enumeration) fieldType, writer);
+            simpleTypeWriter.marshalEnumerationField(fieldInfo, element, (Enumeration) fieldType,
+                writer);
         }
         else if (fieldType instanceof SimpleType) {
             simpleTypeWriter.marshalSimpleField(fieldInfo, element, (SimpleType) fieldType, writer);
@@ -312,8 +309,8 @@ public class Marshaller {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void marshalSequenceListField(SequenceElement element,
-        BitStreamWriter writer) throws IOException {
+    private void marshalSequenceListField(SequenceElement element, BitStreamWriter writer)
+        throws IOException {
         log.debug("marshalling list field {}", element.getName());
         List<Object> items = (List<Object>) evaluator.getParentProperty(element.getName());
         int index = 0;

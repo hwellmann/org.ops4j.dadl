@@ -99,8 +99,8 @@ public class SimpleTypeReader {
         return (T) info;
     }
 
-    Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass, AbstractBitStreamReader reader)
-        throws IOException {
+    Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass,
+        AbstractBitStreamReader reader) throws IOException {
         switch (simpleType.getRepresentation()) {
             case BINARY:
                 return readIntegerValueAsBinary(simpleType, klass, reader);
@@ -119,7 +119,8 @@ public class SimpleTypeReader {
             case BCD:
                 return readIntegerValueAsBcdBinary(simpleType, klass, reader);
             default:
-                throw new UnsupportedOperationException("unsupported binaryNumberRep = " + simpleType.getBinaryNumberRep());
+                throw new UnsupportedOperationException("unsupported binaryNumberRep = "
+                    + simpleType.getBinaryNumberRep());
         }
     }
 
@@ -209,8 +210,7 @@ public class SimpleTypeReader {
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);
-            byte[] bytes = readBytes(reader, length);
-            return bytes;
+            return readBytes(reader, length);
         }
         throw new UnsupportedOperationException();
     }
