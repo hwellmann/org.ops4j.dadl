@@ -77,7 +77,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readUnsignedByte();
         }
         else {
-            result = (int) (readBits(BYTE_SIZE) & 0xFF);
+            result = (int) (readBits(BYTE_SIZE) & -1);
         }
         return result;
     }
@@ -101,7 +101,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readUnsignedShort();
         }
         else {
-            result = (int) (readBits(SHORT_SIZE) & 0xFFFF);
+            result = (int) (readBits(SHORT_SIZE) & -1);
         }
         return result;
     }
