@@ -11,6 +11,11 @@
     <packaging>pom</packaging>
 
     <name>OPS4J Data Description Language (DADL) Reactor</name>
+    
+    <description>
+        DADL is a language and a toolset for describing, parsing and generating data formats 
+        of all sorts.
+    </description>
 
     <scm>
         <connection>scm:git:git@github.com:ops4j/org.ops4j.dadl.git</connection>
