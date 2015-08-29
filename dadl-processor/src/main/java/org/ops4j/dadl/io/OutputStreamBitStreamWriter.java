@@ -188,9 +188,9 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
 
         if (bitPosition % alignVal != 0) {
             newPosition = ((bitPosition / alignVal) + 1) * alignVal;
-            long bytesToWrite = (newPosition - bitPosition) / 8;
+            long bytesToWrite = (newPosition - bitPosition) / BYTE_SIZE;
             if (bytesToWrite > 0) {
-                if ((newPosition - bitPosition) % 8 != 0) {
+                if ((newPosition - bitPosition) % BYTE_SIZE != 0) {
                     bytesToWrite++;
                 }
                 byte[] b = new byte[(int) bytesToWrite];

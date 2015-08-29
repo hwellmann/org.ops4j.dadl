@@ -18,6 +18,7 @@
 package org.ops4j.dadl.processor;
 
 import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.DEC_BASE;
 import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
 import java.io.IOException;
@@ -155,10 +156,10 @@ public class SimpleTypeReader {
         int numDigits = numBits / NIBBLE_SIZE;
         long value = 0;
         for (int i = 0; i < numDigits; i++) {
-            value *= 10;
+            value *= DEC_BASE;
             long digit = reader.readBits(NIBBLE_SIZE);
             // TODO signed numbers, assume non-negative for now
-            if (digit > 9) {
+            if (digit >= DEC_BASE) {
                 throw new UnmarshalException("illegal digit: " + digit);
             }
             value += digit;

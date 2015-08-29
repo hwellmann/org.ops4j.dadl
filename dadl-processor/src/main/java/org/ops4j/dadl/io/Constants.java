@@ -40,6 +40,9 @@ public class Constants  {
     /** Number of bits per long. */
     public static final int LONG_SIZE = 64;
 
+    /** Decimal base. */
+    public static final int DEC_BASE = 16;
+
     /** Hexadecimal base. */
     public static final int HEX_BASE = 16;
 
