@@ -92,8 +92,8 @@ public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
         }
         bitOffset = 0;
         bais.reset();
-        long numBytes = bais.skip(pos);
-        if (numBytes != pos) {
+        long numSkippedBytes = bais.skip(pos);
+        if (numSkippedBytes != pos) {
             throw new IOException("could not skip requested number of bytes: " + pos);
         }
 

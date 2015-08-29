@@ -66,6 +66,7 @@ import com.sun.codemodel.writer.FileCodeWriter;
  */
 public class JavaModelGenerator {
 
+    private static final String VALUE = "value";
     private ValidatedModel model;
     private String packageName;
     private Path outputDir;
@@ -139,7 +140,7 @@ public class JavaModelGenerator {
                 klass = pkg._enum(enumeration.getName());
             }
             if (klass != null) {
-                klass.annotate(Generated.class).param("value", getClass().getName())
+                klass.annotate(Generated.class).param(VALUE, getClass().getName())
                     .param("date", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
             }
         }
@@ -159,26 +160,26 @@ public class JavaModelGenerator {
 
     private void generateEnumerationFromValueMethod(JDefinedClass klass, JType jtype) {
         JMethod method = klass.method(JMod.PUBLIC | JMod.STATIC, klass, "fromValue");
-        JVar valueParam = method.param(jtype, "value");
+        JVar valueParam = method.param(jtype, VALUE);
         JBlock methodBody = method.body();
         JBlock foreachBody = methodBody.forEach(klass, "v", klass.staticInvoke("values")).body();
         JFieldRef vRef = JExpr.ref("v");
         foreachBody._if(vRef.invoke("getValue").invoke("equals").arg(valueParam))
             ._then()._return(vRef);
         methodBody._throw(JExpr._new(codeModel.ref(IllegalArgumentException.class))
-            .arg(JExpr.lit("illegal enumeration value: ").plus(JExpr.ref("value"))));
+            .arg(JExpr.lit("illegal enumeration value: ").plus(JExpr.ref(VALUE))));
     }
 
     private void generateEnumerationConstructor(JDefinedClass klass, JType jtype) {
         JMethod constructor = klass.constructor(JMod.PRIVATE);
-        JVar param = constructor.param(jtype, "value");
-        constructor.body().assign(JExpr._this().ref("value"), param);
+        JVar param = constructor.param(jtype, VALUE);
+        constructor.body().assign(JExpr._this().ref(VALUE), param);
     }
 
     private void generateEnumerationFieldAndGetter(JDefinedClass klass, JType jtype) {
-        JFieldVar field = klass.field(JMod.PRIVATE, jtype, "value");
+        JFieldVar field = klass.field(JMod.PRIVATE, jtype, VALUE);
 
-        JMethod getter = klass.method(JMod.PUBLIC, jtype, getGetterName("value"));
+        JMethod getter = klass.method(JMod.PUBLIC, jtype, getGetterName(VALUE));
         getter.body()._return(field);
     }
 

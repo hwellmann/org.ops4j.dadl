@@ -91,13 +91,14 @@ public final class Evaluator {
     }
 
     /**
-     * Takes a value of the given enumeration type, converts it to its Java model represenation and
+     * Takes a value of the given enumeration type, converts it to its Java model representation and
      * pushes the result onto the stack, updating {@code self}.
      *
      * @param info
      *            object to be pushed
      * @param klass
      *            Java model class for a DADL enumeration type
+     * @return Java enumeration value
      */
     public Object setSelfEnumeration(Object info, Class<?> klass) {
         try {
