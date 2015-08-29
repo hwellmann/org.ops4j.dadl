@@ -53,6 +53,7 @@ public interface DadlAdapter<T> {
      *
      * @param reader
      *            bit stream reader
+     * @return value of mapped type
      * @throws IOException
      *             on read error
      */

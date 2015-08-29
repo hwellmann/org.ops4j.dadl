@@ -29,7 +29,7 @@ import java.io.IOException;
 public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
 
     private ByteArrayInputStream bais;
-    private long length;
+    private long numBytes;
 
     /**
      * Constructs a bit stream reader reading from a segment of the given byte array.
@@ -43,7 +43,7 @@ public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
      */
     public ByteArrayBitStreamReader(byte[] b, int offset, int length) {
         bais = new ByteArrayInputStream(b, offset, length);
-        this.length = length;
+        this.numBytes = length;
     }
 
     /**
@@ -54,7 +54,7 @@ public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
      */
     public ByteArrayBitStreamReader(byte[] b) {
         bais = new ByteArrayInputStream(b);
-        length = b.length;
+        numBytes = b.length;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
 
     @Override
     public long length() {
-        return length;
+        return numBytes;
     }
 
     @Override
