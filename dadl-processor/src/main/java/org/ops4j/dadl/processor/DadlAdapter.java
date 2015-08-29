@@ -19,8 +19,8 @@ package org.ops4j.dadl.processor;
 
 import java.io.IOException;
 
-import org.ops4j.dadl.io.AbstractBitStreamReader;
-import org.ops4j.dadl.io.OutputStreamBitStreamWriter;
+import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.BitStreamWriter;
 
 /**
  * An adapter for overriding the default (un)marshalling of a given type.
@@ -46,7 +46,7 @@ public interface DadlAdapter<T> {
      * @throws IOException
      *             on write error
      */
-    void marshal(T info, OutputStreamBitStreamWriter writer) throws IOException;
+    void marshal(T info, BitStreamWriter writer) throws IOException;
 
     /**
      * Marshals an object of the info model type from the given reader.
@@ -57,5 +57,5 @@ public interface DadlAdapter<T> {
      * @throws IOException
      *             on read error
      */
-    T unmarshal(AbstractBitStreamReader reader) throws IOException;
+    T unmarshal(BitStreamReader reader) throws IOException;
 }

@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.AbstractBitStreamReader;
-import org.ops4j.dadl.io.OutputStreamBitStreamWriter;
+import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.BitStreamWriter;
 
 /**
  * @author hwellmann
@@ -31,7 +31,7 @@ import org.ops4j.dadl.io.OutputStreamBitStreamWriter;
 public class VarIntAdapter implements DadlAdapter<Long> {
 
     @Override
-    public void marshal(Long info, OutputStreamBitStreamWriter writer) throws IOException {
+    public void marshal(Long info, BitStreamWriter writer) throws IOException {
         if (info < 0) {
             throw new MarshalException("value must not be negative: " + info);
         }
@@ -60,7 +60,7 @@ public class VarIntAdapter implements DadlAdapter<Long> {
     }
 
     @Override
-    public Long unmarshal(AbstractBitStreamReader reader) throws IOException {
+    public Long unmarshal(BitStreamReader reader) throws IOException {
         long value = reader.readUnsignedByte();
         if (value < 128) {
             return value;

@@ -22,7 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.AbstractBitStreamReader;
+import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
@@ -52,7 +52,7 @@ public class SimpleTypeReader {
 
     @SuppressWarnings("unchecked")
     <T> T readEnumerationValue(Enumeration enumeration, Element element, Class<T> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         log.debug("reading simple value of type {}", enumeration.getName());
         Object info = context.readValueViaAdapter(enumeration, reader);
         if (info != null) {
@@ -75,7 +75,7 @@ public class SimpleTypeReader {
 
     @SuppressWarnings("unchecked")
     <T> T readSimpleValue(SimpleType simpleType, Element element, Class<T> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         log.debug("reading simple value of type {}", simpleType.getName());
         Object info = context.readValueViaAdapter(simpleType, reader);
         if (info != null) {
@@ -100,7 +100,7 @@ public class SimpleTypeReader {
     }
 
     Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         switch (simpleType.getRepresentation()) {
             case BINARY:
                 return readIntegerValueAsBinary(simpleType, klass, reader);
@@ -112,7 +112,7 @@ public class SimpleTypeReader {
     }
 
     Number readIntegerValueAsBinary(SimpleType simpleType, Class<?> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         switch (simpleType.getBinaryNumberRep()) {
             case BINARY:
                 return readIntegerValueAsStandardBinary(simpleType, klass, reader);
@@ -125,7 +125,7 @@ public class SimpleTypeReader {
     }
 
     Number readIntegerValueAsStandardBinary(SimpleType simpleType, Class<?> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
@@ -141,7 +141,7 @@ public class SimpleTypeReader {
     }
 
     Number readIntegerValueAsBcdBinary(SimpleType simpleType, Class<?> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= 8;
@@ -165,7 +165,7 @@ public class SimpleTypeReader {
     }
 
     Number readIntegerValueAsText(SimpleType type, Element element, Class<?> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(element);
             byte[] bytes = readBytes(reader, length);
@@ -175,7 +175,7 @@ public class SimpleTypeReader {
         throw new UnsupportedOperationException();
     }
 
-    String readTextValue(SimpleType type, DadlType representation, AbstractBitStreamReader reader)
+    String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader)
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);
@@ -196,7 +196,7 @@ public class SimpleTypeReader {
      * @return
      * @throws IOException
      */
-    private byte[] readBytes(AbstractBitStreamReader reader, long length) throws IOException {
+    private byte[] readBytes(BitStreamReader reader, long length) throws IOException {
         byte[] bytes = new byte[(int) length];
         int numBytes = reader.read(bytes);
         if (numBytes < length) {
@@ -206,7 +206,7 @@ public class SimpleTypeReader {
         return bytes;
     }
 
-    byte[] readOpaqueValue(SimpleType type, DadlType representation, AbstractBitStreamReader reader)
+    byte[] readOpaqueValue(SimpleType type, DadlType representation, BitStreamReader reader)
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
             long length = evaluator.computeLength(representation);

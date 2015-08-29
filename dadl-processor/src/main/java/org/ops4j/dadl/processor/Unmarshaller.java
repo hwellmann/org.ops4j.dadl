@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.ops4j.dadl.exc.Exceptions;
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.AbstractBitStreamReader;
+import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
@@ -102,12 +102,12 @@ public class Unmarshaller {
     public <T> T unmarshal(byte[] bytes, int offset, int length, Class<T> klass) throws IOException {
         String typeName = klass.getSimpleName();
         DadlType type = model.getType(typeName);
-        try (AbstractBitStreamReader reader = new ByteArrayBitStreamReader(bytes, offset, length)) {
+        try (BitStreamReader reader = new ByteArrayBitStreamReader(bytes, offset, length)) {
             return unmarshal(type, klass, reader);
         }
     }
 
-    private <T> T unmarshal(DadlType type, Class<T> klass, AbstractBitStreamReader reader)
+    private <T> T unmarshal(DadlType type, Class<T> klass, BitStreamReader reader)
         throws IOException {
         long startPos = reader.getBitPosition();
         T info = context.readValueViaAdapter(type, reader);
@@ -131,7 +131,7 @@ public class Unmarshaller {
         return info;
     }
 
-    private void skipPadding(DadlType type, long startPos, AbstractBitStreamReader reader)
+    private void skipPadding(DadlType type, long startPos, BitStreamReader reader)
         throws IOException {
         boolean hasExactLength = (type.getLengthKind() == LengthKind.EXPLICIT);
         boolean hasMinLength = (type.getMinLength() != null);
@@ -169,7 +169,7 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalSequence(T info, Sequence sequence, Class<T> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
@@ -185,7 +185,7 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalTaggedSequence(T info, TaggedSequence sequence, Class<T> klass,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
@@ -214,7 +214,7 @@ public class Unmarshaller {
      * @param reader
      * @throws IOException
      */
-    private void unmarshalTag(Tag tag, AbstractBitStreamReader reader) throws IOException {
+    private void unmarshalTag(Tag tag, BitStreamReader reader) throws IOException {
         String typeName = tag.getType();
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
@@ -233,7 +233,7 @@ public class Unmarshaller {
         }
     }
 
-    private long unmarshalLengthField(LengthField lengthField, AbstractBitStreamReader reader)
+    private long unmarshalLengthField(LengthField lengthField, BitStreamReader reader)
         throws IOException {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
@@ -251,7 +251,7 @@ public class Unmarshaller {
     }
 
     private void unmarshalSequenceField(Class<?> klass, SequenceElement element,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence element {}", element.getName());
         try {
             Field field = klass.getDeclaredField(element.getName());
@@ -273,7 +273,7 @@ public class Unmarshaller {
     }
 
     private void unmarshalSequenceListField(Class<?> klass, SequenceElement element,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         switch (element.getOccursCountKind()) {
             case EXPRESSION:
                 unmarshalSequenceListFieldByExpression(klass, element, reader);
@@ -288,7 +288,7 @@ public class Unmarshaller {
     }
 
     private void unmarshalSequenceListFieldByExpression(Class<?> klass, SequenceElement element,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         Long numItems = evaluator.evaluate(element.getOccursCount(), Long.class);
 
         @SuppressWarnings("unchecked")
@@ -301,7 +301,7 @@ public class Unmarshaller {
     }
 
     private void unmarshalSequenceListFieldParsed(Class<?> klass, SequenceElement element,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
 
         @SuppressWarnings("unchecked")
         List<Object> list = (List<Object>) evaluator.getParentProperty(element.getName());
@@ -320,7 +320,7 @@ public class Unmarshaller {
     }
 
     private Object unmarshalSequenceIndividualField(Class<?> klass, Element element,
-        AbstractBitStreamReader reader) throws IOException {
+        BitStreamReader reader) throws IOException {
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
             return simpleTypeReader.readEnumerationValue((Enumeration) fieldType, element, klass,
@@ -335,7 +335,7 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass,
-        AbstractBitStreamReader reader) {
+        BitStreamReader reader) {
         log.debug("unmarshalling choice {}", choice.getName());
         boolean branchMatched = false;
         evaluator.pushStack();
@@ -367,7 +367,7 @@ public class Unmarshaller {
     }
 
     private <T> boolean unmarshalChoiceElement(Element element, Class<T> klass,
-        AbstractBitStreamReader reader) throws NoSuchFieldException, IOException {
+        BitStreamReader reader) throws NoSuchFieldException, IOException {
         boolean branchMatched;
         String fieldName = element.getName();
         Field field = klass.getDeclaredField(fieldName);

@@ -69,8 +69,8 @@ public interface BitStreamWriter extends ImageOutputStream {
      *
      * @param value
      *            value to be written
-     * @param number
-     *            of bits to be written (including sign)
+     * @param numBits
+     *            number of bits to be written (including sign)
      * @throws IOException
      */
     void writeBigInteger(BigInteger value, int numBits) throws IOException;
