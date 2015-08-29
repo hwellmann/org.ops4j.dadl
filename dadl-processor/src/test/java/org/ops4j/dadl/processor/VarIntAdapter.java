@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.AbstractBitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 
 /**
@@ -60,7 +60,7 @@ public class VarIntAdapter implements DadlAdapter<Long> {
     }
 
     @Override
-    public Long unmarshal(BitStreamReader reader) throws IOException {
+    public Long unmarshal(AbstractBitStreamReader reader) throws IOException {
         long value = reader.readUnsignedByte();
         if (value < 128) {
             return value;

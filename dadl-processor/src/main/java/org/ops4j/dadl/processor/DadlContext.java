@@ -26,7 +26,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.ops4j.dadl.exc.DadlException;
-import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.AbstractBitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Model;
@@ -125,7 +125,7 @@ public class DadlContext {
     }
 
 
-    <T> T readValueViaAdapter(DadlType type, BitStreamReader reader)
+    <T> T readValueViaAdapter(DadlType type, AbstractBitStreamReader reader)
         throws IOException {
         DadlAdapter<T> adapter = getAdapter(type);
         if (adapter == null) {

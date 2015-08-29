@@ -21,19 +21,37 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
+ * A {@link BitStreamReader} backed by a byte array in memory.
+ *
  * @author hwellmann
  *
  */
-public class ByteArrayBitStreamReader extends BitStreamReader {
+public class ByteArrayBitStreamReader extends AbstractBitStreamReader {
 
     private ByteArrayInputStream bais;
     private long length;
 
+    /**
+     * Constructs a bit stream reader reading from a segment of the given byte array.
+     *
+     * @param b
+     *            byte array
+     * @param offset
+     *            offset of segment, relative to position 0
+     * @param length
+     *            length of the segment
+     */
     public ByteArrayBitStreamReader(byte[] b, int offset, int length) {
         bais = new ByteArrayInputStream(b, offset, length);
         this.length = length;
     }
 
+    /**
+     * Constructs a bit stream reader reading from the given byte array.
+     *
+     * @param b
+     *            byte array
+     */
     public ByteArrayBitStreamReader(byte[] b) {
         bais = new ByteArrayInputStream(b);
         length = b.length;

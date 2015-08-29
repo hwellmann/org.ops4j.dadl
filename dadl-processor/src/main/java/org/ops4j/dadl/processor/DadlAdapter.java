@@ -19,7 +19,7 @@ package org.ops4j.dadl.processor;
 
 import java.io.IOException;
 
-import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.AbstractBitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
 
 /**
@@ -56,5 +56,5 @@ public interface DadlAdapter<T> {
      * @throws IOException
      *             on read error
      */
-    T unmarshal(BitStreamReader reader) throws IOException;
+    T unmarshal(AbstractBitStreamReader reader) throws IOException;
 }

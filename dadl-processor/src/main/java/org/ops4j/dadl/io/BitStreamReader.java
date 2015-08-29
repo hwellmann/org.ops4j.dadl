@@ -19,184 +19,88 @@ package org.ops4j.dadl.io;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
-import javax.imageio.stream.ImageInputStreamImpl;
+import javax.imageio.stream.ImageInputStream;
 
 /**
+ * Reads integer and string values from a bit stream.
+ *
  * @author hwellmann
  *
  */
-public abstract class BitStreamReader extends ImageInputStreamImpl {
+public interface BitStreamReader extends ImageInputStream {
 
-    private ByteBuffer buffer = ByteBuffer.allocate(2048);
+    /**
+     * Gets the current bit position in the stream. This is the position of the bit that will be
+     * read next. The first bit has position 0.
+     *
+     * @return bit position
+     */
+    long getBitPosition();
 
-    public long getBitPosition() {
-        return 8 * streamPos + bitOffset;
-    }
+    /**
+     * Sets the current bit position in the stream. This can be used to skip or re-read parts of the
+     * stream.
+     *
+     * @param pos
+     *            new bit position
+     */
+    void setBitPosition(long pos) throws IOException;
 
-    public void setBitPosition(long pos) throws IOException {
-        int newBitOffset = (int) (pos % 8);
-        long newBytePos = pos / 8;
-        seek(newBytePos);
-        if (newBitOffset != 0) {
-            setBitOffset(newBitOffset);
-        }
-    }
+    /**
+     * Reads an unsigned {@code BigInteger} with the given number of bits.
+     *
+     * @param numBits
+     *            number of bits
+     * @return big integer
+     * @throws IOException
+     */
+    BigInteger readBigInteger(int numBits) throws IOException;
 
-    @Override
-    public byte readByte() throws IOException {
-        byte result;
-        if (bitOffset == 0) {
-            result = super.readByte();
-        }
-        else {
-            result = (byte) readBits(8);
-        }
-        return result;
-    }
+    /**
+     * Reads an signed {@code BigInteger} in two's complement with the given number of bits. The
+     * first bit is the sign
+     *
+     * @param numBits
+     *            number of bits
+     * @return big integer
+     * @throws IOException
+     */
+    BigInteger readSignedBigInteger(int numBits) throws IOException;
 
-    @Override
-    public int readUnsignedByte() throws IOException {
-        int result;
-        if (bitOffset == 0) {
-            result = super.readUnsignedByte();
-        }
-        else {
-            result = (int) (readBits(8) & 0xFF);
-        }
-        return result;
-    }
+    /**
+     * Reads a zero-terminated string in UTF-8 encoding.
+     *
+     * @return string, not including the terminating zero byte
+     * @throws IOException
+     */
+    String readString() throws IOException;
 
-    @Override
-    public short readShort() throws IOException {
-        short result;
-        if (bitOffset == 0) {
-            result = super.readShort();
-        }
-        else {
-            result = (short) readBits(16);
-        }
-        return result;
-    }
+    /**
+     * Skips the given number of bits.
+     *
+     * @param numBits
+     *            number of bits to be skipped
+     * @throws IOException
+     */
+    void skipBits(long numBits) throws IOException;
 
-    @Override
-    public int readUnsignedShort() throws IOException {
-        int result;
-        if (bitOffset == 0) {
-            result = super.readUnsignedShort();
-        }
-        else {
-            result = (int) (readBits(16) & 0xFFFF);
-        }
-        return result;
-    }
+    /**
+     * Skips forward to the next bit position which is divisible by the given alignment value. The
+     * bit position remains unchanged when the current position is aligned.
+     *
+     * @param alignment
+     * @throws IOException
+     */
+    void alignTo(int alignment) throws IOException;
 
-    @Override
-    public int readInt() throws IOException {
-        int result;
-        if (bitOffset == 0) {
-            result = super.readInt();
-        }
-        else {
-            result = (int) readBits(32);
-        }
-        return result;
-    }
-
-    @Override
-    public long readUnsignedInt() throws IOException {
-        long result;
-        if (bitOffset == 0) {
-            result = super.readUnsignedInt();
-        }
-        else {
-            result = readBits(32);
-        }
-        return result;
-    }
-
-    @Override
-    public long readLong() throws IOException {
-        long result;
-        if (bitOffset == 0) {
-            result = super.readLong();
-        }
-        else {
-            result = readBits(64);
-        }
-        return result;
-    }
-
-    public BigInteger readBigInteger(int numBits) throws IOException {
-        BigInteger result = BigInteger.ZERO;
-        int toBeRead = numBits;
-        if (toBeRead > 8) {
-            if (bitOffset != 0) {
-                int prefixLength = 8 - bitOffset;
-                long mostSignificantBits = readBits(prefixLength);
-                result = BigInteger.valueOf(mostSignificantBits);
-                toBeRead -= prefixLength;
-            }
-
-            int numBytes = toBeRead / 8;
-            byte[] b = new byte[numBytes];
-            readFully(b);
-            BigInteger i = new BigInteger(1, b);
-            result = result.shiftLeft(8 * numBytes);
-            result = result.or(i);
-            toBeRead %= 8;
-        }
-        if (toBeRead > 0) {
-            long value = readBits(toBeRead);
-            result = result.shiftLeft(toBeRead);
-            result = result.or(BigInteger.valueOf(value));
-        }
-        return result;
-    }
-
-    public BigInteger readSignedBigInteger(int numBits) throws IOException {
-        BigInteger result = readBigInteger(numBits);
-        if (result.testBit(numBits - 1)) {
-            result = result.subtract(BigInteger.ONE.shiftLeft(numBits));
-        }
-        return result;
-    }
-
-    public String readString() throws IOException {
-        buffer.rewind();
-        while (true) {
-            byte characterByte = this.readByte();
-            if (characterByte == 0) {
-                break;
-            }
-            buffer.put(characterByte);
-        }
-        byte[] bytes = Arrays.copyOf(buffer.array(), buffer.position());
-        return new String(bytes, StandardCharsets.UTF_8);
-    }
-
-    public void skipBits(long bitCnt) throws IOException {
-        setBitPosition(getBitPosition() + bitCnt);
-    }
-
-    public void alignTo(int alignVal) throws IOException {
-        long bitPosition = getBitPosition();
-        long newPosition = bitPosition;
-
-        if (bitPosition % alignVal != 0) {
-            newPosition = ((bitPosition / alignVal) + 1) * alignVal;
-            setBitPosition(newPosition);
-        }
-    }
-
-    public long readSignedBits(int numBits) throws IOException {
-        long result = readBits(numBits);
-        if (result >= (1L << (numBits - 1))) {
-            result -= 1L << numBits;
-        }
-        return result;
-    }
+    /**
+     * Reads the given number of bits, interpreted as a signed binary number in two's complement.
+     *
+     * @param numBits
+     *            number of bits to be read (64 or less)
+     * @return signed value
+     * @throws IOException
+     */
+    long readSignedBits(int numBits) throws IOException;
 }
