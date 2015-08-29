@@ -33,51 +33,51 @@ import org.ops4j.dadl.metamodel.gen.visitor.VisitorAction;
  * @author hwellmann
  *
  */
-public class TypeCollectingVisitor extends BaseVisitor {
+class TypeCollectingVisitor extends BaseVisitor {
 
     private Map<String, DadlType> typeMap = new HashMap<>();
 
     @Override
-    public VisitorAction enter(Enumeration enumeration) {
-        Object present = typeMap.putIfAbsent(enumeration.getName(), enumeration);
+    public VisitorAction enter(Enumeration type) {
+        Object present = typeMap.putIfAbsent(type.getName(), type);
         if (present != null) {
-            throw new IllegalArgumentException("duplicate type " + enumeration.getName());
+            duplicateType(type.getName());
         }
         return VisitorAction.CONTINUE;
     }
 
     @Override
-    public VisitorAction enter(Sequence sequence) {
-        Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
+    public VisitorAction enter(Sequence type) {
+        Object present = typeMap.putIfAbsent(type.getName(), type);
         if (present != null) {
-            throw new IllegalArgumentException("duplicate type " + sequence.getName());
+            duplicateType(type.getName());
         }
         return VisitorAction.CONTINUE;
     }
 
     @Override
-    public VisitorAction enter(TaggedSequence sequence) {
-        Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
+    public VisitorAction enter(TaggedSequence type) {
+        Object present = typeMap.putIfAbsent(type.getName(), type);
         if (present != null) {
-            throw new IllegalArgumentException("duplicate type " + sequence.getName());
+            duplicateType(type.getName());
         }
         return VisitorAction.CONTINUE;
     }
 
     @Override
-    public VisitorAction enter(Choice sequence) {
-        Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
+    public VisitorAction enter(Choice type) {
+        Object present = typeMap.putIfAbsent(type.getName(), type);
         if (present != null) {
-            throw new IllegalArgumentException("duplicate type " + sequence.getName());
+            duplicateType(type.getName());
         }
         return VisitorAction.CONTINUE;
     }
 
     @Override
-    public VisitorAction enter(SimpleType sequence) {
-        Object present = typeMap.putIfAbsent(sequence.getName(), sequence);
+    public VisitorAction enter(SimpleType type) {
+        Object present = typeMap.putIfAbsent(type.getName(), type);
         if (present != null) {
-            throw new IllegalArgumentException("duplicate type " + sequence.getName());
+            duplicateType(type.getName());
         }
         return VisitorAction.CONTINUE;
     }
@@ -90,4 +90,8 @@ public class TypeCollectingVisitor extends BaseVisitor {
         return typeMap;
     }
 
+
+    private void duplicateType(String name) {
+        throw new IllegalArgumentException("duplicate type " + name);
+    }
 }

@@ -38,15 +38,13 @@ import org.ops4j.dadl.metamodel.gen.visitor.VisitorAction;
  * @author hwellmann
  *
  */
-public class TypeCheckingVisitor extends BaseVisitor {
+class TypeCheckingVisitor extends BaseVisitor {
 
 
     private Map<String, DadlType> typeMap;
     private Set<String> linked;
-    /**
-     *
-     */
-    public TypeCheckingVisitor(Map<String, DadlType> typeMap) {
+
+    TypeCheckingVisitor(Map<String, DadlType> typeMap) {
         this.typeMap = typeMap;
         this.linked = new HashSet<>();
     }
@@ -85,7 +83,8 @@ public class TypeCheckingVisitor extends BaseVisitor {
         for (EnumerationElement element : enumeration.getElement()) {
             EnumerationElement present = elements.putIfAbsent(element.getName(), element);
             if (present != null) {
-                String msg = String.format("duplicate enumeration element %s.%s", enumeration.getName(), element.getName());
+                String msg = String.format("duplicate enumeration element %s.%s",
+                    enumeration.getName(), element.getName());
                 throw new IllegalArgumentException(msg);
             }
             // TODO validate values
