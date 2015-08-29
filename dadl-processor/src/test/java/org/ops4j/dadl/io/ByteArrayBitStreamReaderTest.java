@@ -40,4 +40,23 @@ public class ByteArrayBitStreamReaderTest {
         reader.close();
     }
 
+    @Test
+    public void shouldReadUnsignedByte() throws IOException {
+        byte[] bytes = { (byte) 0, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF0 };
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(bytes);
+        reader.readByte();
+        int value = reader.readUnsignedByte();
+        assertThat(value, is(0xFF));
+        reader.close();
+    }
+
+    @Test
+    public void shouldReadUnsignedByteUnaligned() throws IOException {
+        byte[] bytes = { (byte) 0, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF0 };
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(bytes);
+        reader.skipBits(2);
+        int value = reader.readUnsignedByte();
+        assertThat(value, is(3));
+        reader.close();
+    }
 }
