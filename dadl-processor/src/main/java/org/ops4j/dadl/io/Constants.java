@@ -41,7 +41,7 @@ public class Constants  {
     public static final int LONG_SIZE = 64;
 
     /** Decimal base. */
-    public static final int DEC_BASE = 16;
+    public static final int DEC_BASE = 10;
 
     /** Hexadecimal base. */
     public static final int HEX_BASE = 16;
