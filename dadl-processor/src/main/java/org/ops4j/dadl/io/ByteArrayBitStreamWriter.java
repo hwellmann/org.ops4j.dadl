@@ -23,19 +23,31 @@ import java.io.IOException;
 import org.ops4j.dadl.exc.Exceptions;
 
 /**
+ * A bit stream writer writing to a byte array.
+ *
  * @author hwellmann
  *
  */
-public class ByteArrayBitStreamWriter extends BitStreamWriter {
+public class ByteArrayBitStreamWriter extends OutputStreamBitStreamWriter {
 
-    private ByteArrayOutputStream baos;
     private boolean isClosed;
 
+    /**
+     * Creates a new writer.
+     */
     public ByteArrayBitStreamWriter() {
         super(new ByteArrayOutputStream());
-        baos = (ByteArrayOutputStream) os;
     }
 
+    @Override
+    protected ByteArrayOutputStream getStream() {
+        return (ByteArrayOutputStream) super.getStream();
+    }
+
+    /**
+     * Closes the writer and returns the underlying byte array.
+     * @return byte array
+     */
     public byte[] toByteArray() {
         try {
             close();
@@ -43,7 +55,7 @@ public class ByteArrayBitStreamWriter extends BitStreamWriter {
         catch (IOException exc) {
             throw Exceptions.unchecked(exc);
         }
-        return baos.toByteArray();
+        return getStream().toByteArray();
     }
 
     @Override

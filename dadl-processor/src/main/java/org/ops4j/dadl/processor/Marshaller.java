@@ -25,7 +25,7 @@ import javax.el.ELProcessor;
 
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.BitStreamWriter;
+import org.ops4j.dadl.io.OutputStreamBitStreamWriter;
 import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
@@ -79,12 +79,12 @@ public class Marshaller {
     public void marshal(Object info, OutputStream os) throws IOException {
         String typeName = info.getClass().getSimpleName();
         DadlType type = model.getType(typeName);
-        try (BitStreamWriter writer = new BitStreamWriter(os)) {
+        try (OutputStreamBitStreamWriter writer = new OutputStreamBitStreamWriter(os)) {
             marshal(info, type, writer);
         }
     }
 
-    private void marshal(Object info, DadlType type, BitStreamWriter writer) throws IOException {
+    private void marshal(Object info, DadlType type, OutputStreamBitStreamWriter writer) throws IOException {
         evaluator.setSelf(info);
         long startPos = writer.getBitPosition();
         if (!context.writeValueViaAdapter(type, info, writer)) {
@@ -104,7 +104,7 @@ public class Marshaller {
         fillPadding(type, startPos, writer);
     }
 
-    private void fillPadding(DadlType type, long startPos, BitStreamWriter writer)
+    private void fillPadding(DadlType type, long startPos, OutputStreamBitStreamWriter writer)
         throws IOException {
         boolean hasExactLength = (type.getLengthKind() == LengthKind.EXPLICIT);
         boolean hasMinLength = (type.getMinLength() != null);
@@ -149,7 +149,7 @@ public class Marshaller {
      * @param writer
      * @throws IOException
      */
-    private void marshalSequence(Sequence sequence, BitStreamWriter writer) throws IOException {
+    private void marshalSequence(Sequence sequence, OutputStreamBitStreamWriter writer) throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
@@ -160,7 +160,7 @@ public class Marshaller {
         }
     }
 
-    private void marshalTaggedSequence(TaggedSequence sequence, BitStreamWriter writer)
+    private void marshalTaggedSequence(TaggedSequence sequence, OutputStreamBitStreamWriter writer)
         throws IOException {
         log.debug("marshalling sequence {}", sequence.getName());
         evaluator.pushStack();
@@ -199,7 +199,7 @@ public class Marshaller {
      * @throws IOException
      */
     private void marshalLengthField(LengthField lengthField, long numPayloadBits,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
@@ -210,7 +210,7 @@ public class Marshaller {
         }
     }
 
-    private void marshalChoice(Object info, Choice choice, BitStreamWriter writer)
+    private void marshalChoice(Object info, Choice choice, OutputStreamBitStreamWriter writer)
         throws IOException {
         log.debug("marshalling choice {}", choice.getType());
         evaluator.pushStack();
@@ -240,7 +240,7 @@ public class Marshaller {
      * @param writer
      * @throws IOException
      */
-    private void marshalTag(Tag tag, BitStreamWriter writer) throws IOException {
+    private void marshalTag(Tag tag, OutputStreamBitStreamWriter writer) throws IOException {
         String typeName = tag.getType();
         Object type = model.getType(typeName);
         if (type instanceof SimpleType) {
@@ -261,21 +261,21 @@ public class Marshaller {
         return Long.parseUnsignedLong(tag.getHexValue(), 16);
     }
 
-    private void marshalSequencePayload(Sequence sequence, BitStreamWriter writer)
+    private void marshalSequencePayload(Sequence sequence, OutputStreamBitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
             marshalSequenceField(element, writer);
         }
     }
 
-    private void marshalTaggedSequencePayload(TaggedSequence sequence, BitStreamWriter writer)
+    private void marshalTaggedSequencePayload(TaggedSequence sequence, OutputStreamBitStreamWriter writer)
         throws IOException {
         for (SequenceElement element : sequence.getElement()) {
             marshalSequenceField(element, writer);
         }
     }
 
-    private void marshalSequenceField(SequenceElement element, BitStreamWriter writer)
+    private void marshalSequenceField(SequenceElement element, OutputStreamBitStreamWriter writer)
         throws IOException {
         if (model.isList(element)) {
             marshalSequenceListField(element, writer);
@@ -287,7 +287,7 @@ public class Marshaller {
     }
 
     private void marshalSequenceIndividualField(Object fieldInfo, SequenceElement element,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
         log.debug("marshalling field {}", element.getName());
         DadlType fieldType = model.getType(element.getType());
         if (fieldType instanceof Enumeration) {
@@ -309,7 +309,7 @@ public class Marshaller {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void marshalSequenceListField(SequenceElement element, BitStreamWriter writer)
+    private void marshalSequenceListField(SequenceElement element, OutputStreamBitStreamWriter writer)
         throws IOException {
         log.debug("marshalling list field {}", element.getName());
         List<Object> items = (List<Object>) evaluator.getParentProperty(element.getName());
@@ -321,7 +321,7 @@ public class Marshaller {
         }
     }
 
-    private void marshalChoiceField(Object fieldInfo, Element element, BitStreamWriter writer)
+    private void marshalChoiceField(Object fieldInfo, Element element, OutputStreamBitStreamWriter writer)
         throws IOException {
         log.debug("marshalling branch {}", element.getName());
         DadlType fieldType = model.getType(element.getType());

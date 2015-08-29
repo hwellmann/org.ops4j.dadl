@@ -18,165 +18,89 @@
 package org.ops4j.dadl.io;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 
-import javax.imageio.stream.MemoryCacheImageOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 
 /**
+ * Writes integer and string values to a bit stream.
+ *
  * @author hwellmann
  *
  */
-public class BitStreamWriter extends MemoryCacheImageOutputStream {
+public interface BitStreamWriter extends ImageOutputStream {
 
-    protected OutputStream os;
+    /**
+     * Gets the current bit position in the stream. This is the position of the bit that will be
+     * written next. The first bit has position 0.
+     *
+     * @return bit position
+     */
+    long getBitPosition();
 
-    public BitStreamWriter(OutputStream os) {
-        super(os);
-        this.os = os;
-    }
+    /**
+     * Sets the current bit position in the stream. This can be used to skip or re-write parts of
+     * the stream. This method does not write any bits to the stream.
+     *
+     * @param pos
+     *            new bit position
+     */
+    void setBitPosition(long pos) throws IOException;
 
-    public long getBitPosition() {
-        return 8 * streamPos + bitOffset;
-    }
+    /**
+     * Writes an unsigned integer to the stream.
+     *
+     * @param value
+     *            unsigned integer value (less than 2^32).
+     * @throws IOException
+     */
+    void writeUnsignedInt(long value) throws IOException;
 
-    public void setBitPosition(long pos) throws IOException {
-        int newBitOffset = (int) (pos % 8);
-        long newBytePos = pos / 8;
-        seek(newBytePos);
-        if (newBitOffset != 0) {
-            setBitOffset(newBitOffset);
-        }
-    }
+    /**
+     * Aligns to the next byte boundary, filling any skipped bits with 0. Shorthand for
+     * {@code alignTo(8)}.
+     *
+     * @throws IOException
+     */
+    void byteAlign() throws IOException;
 
-    @Override
-    public void writeByte(int value) throws IOException {
-        if (bitOffset == 0) {
-            super.writeByte(value);
-        }
-        else {
-            writeBits(value, 8);
-        }
-    }
+    /**
+     * Writes a signed bit integer value to the stream.
+     *
+     * @param value
+     *            value to be written
+     * @param number
+     *            of bits to be written (including sign)
+     * @throws IOException
+     */
+    void writeBigInteger(BigInteger value, int numBits) throws IOException;
 
-    @Override
-    public void writeBytes(String value) throws IOException {
-        if (bitOffset == 0) {
-            super.writeBytes(value);
-        }
-        else {
-            for (int i = 0; i < value.length(); i++) {
-                writeBits(value.charAt(i), 8);
-            }
-        }
-    }
+    /**
+     * Writes a zero-terminated UTF-8 string.
+     *
+     * @param value
+     *            string value (not including the zero terminator)
+     * @throws IOException
+     */
+    void writeZeroTerminatedString(String value) throws IOException;
 
-    @Override
-    public void writeShort(int value) throws IOException {
-        if (bitOffset == 0) {
-            super.writeShort(value);
-        }
-        else {
-            writeBits(value, 16);
-        }
-    }
+    /**
+     * Skips the given number of bits, not writing anything to the stream.
+     *
+     * @param numBits
+     *            number of bits to be skipped
+     * @throws IOException
+     */
+    void skipBits(int numBits) throws IOException;
 
-    @Override
-    public void writeInt(int value) throws IOException {
-        if (bitOffset == 0) {
-            super.writeInt(value);
-        }
-        else {
-            writeBits(value, 32);
-        }
-    }
-
-    public void writeUnsignedInt(long value) throws IOException {
-        writeBits(value, 32);
-    }
-
-    @Override
-    public void writeLong(long value) throws IOException {
-        if (bitOffset == 0) {
-            super.writeLong(value);
-        }
-        else {
-            writeBits(value, 64);
-        }
-    }
-
-    public void byteAlign() throws IOException {
-        if (bitOffset != 0) {
-            writeBits(0, 8 - bitOffset);
-        }
-    }
-
-    private void writeBitfield(BigInteger value, int numBits)
-        throws IOException {
-        if (numBits >= 64) {
-            long val = value.longValue();
-            writeBitfield(value.shiftRight(64), numBits - 64);
-            writeLong(val);
-        }
-        else if (numBits >= 32) {
-            int val = value.intValue();
-            writeBitfield(value.shiftRight(32), numBits - 32);
-            writeInt(val);
-        }
-        else if (numBits >= 16) {
-            int val = value.shortValue();
-            writeBitfield(value.shiftRight(16), numBits - 16);
-            writeShort(val);
-        }
-        else if (numBits >= 8) {
-            int val = value.byteValue();
-            writeBitfield(value.shiftRight(8), numBits - 8);
-            writeByte(val);
-        }
-        else {
-            int val = value.byteValue();
-            writeBits(val, numBits);
-        }
-    }
-
-    public void writeBigInteger(BigInteger value, int numBits)
-        throws IOException {
-        writeBitfield(value, numBits);
-    }
-
-    public void writeZeroTerminatedString(String value) throws IOException {
-        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-        if (bitOffset == 0) {
-            write(bytes);
-        }
-        else {
-            for (byte b : bytes) {
-                writeByte(b);
-            }
-        }
-        writeByte(0);
-    }
-
-    public void skipBits(int bitCnt) throws IOException {
-        setBitPosition(getBitPosition() + bitCnt);
-    }
-
-    public void alignTo(int alignVal) throws IOException {
-        long bitPosition = getBitPosition();
-        long newPosition = bitPosition;
-
-        if (bitPosition % alignVal != 0) {
-            newPosition = ((bitPosition / alignVal) + 1) * alignVal;
-            long bytesToWrite = (newPosition - bitPosition) / 8;
-            if (bytesToWrite > 0) {
-                if ((newPosition - bitPosition) % 8 != 0)  {
-                    bytesToWrite++;
-                }
-                byte[] b = new byte[(int) bytesToWrite];
-                this.write(b, 0, b.length);
-            }
-            setBitPosition(newPosition);
-        }
-    }
+    /**
+     * Skips forward to the next bit position which is divisible by the given alignment value. The
+     * bit position remains unchanged when the current position is aligned. Any skipped bits are
+     * filled with 0.
+     *
+     * @param alignment
+     *            divisor of bit position
+     * @throws IOException
+     */
+    void alignTo(int alignment) throws IOException;
 }

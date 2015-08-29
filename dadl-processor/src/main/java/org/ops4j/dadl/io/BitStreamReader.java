@@ -89,7 +89,7 @@ public interface BitStreamReader extends ImageInputStream {
      * Skips forward to the next bit position which is divisible by the given alignment value. The
      * bit position remains unchanged when the current position is aligned.
      *
-     * @param alignment
+     * @param alignment divisor of bit position
      * @throws IOException
      */
     void alignTo(int alignment) throws IOException;

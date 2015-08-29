@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
-import org.ops4j.dadl.io.BitStreamWriter;
+import org.ops4j.dadl.io.OutputStreamBitStreamWriter;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
@@ -59,7 +59,7 @@ public class SimpleTypeWriter {
      * @throws IOException
      */
     void marshalSimpleField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
         log.debug("writing simple value of type {}", type.getName());
         Object calculatedValue = calculateValue(fieldInfo, element);
         switch (type.getContentType()) {
@@ -79,7 +79,7 @@ public class SimpleTypeWriter {
     }
 
     void marshalEnumerationField(Object fieldInfo, Element element, Enumeration enumeration,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
         Object rawValue = evaluator.getEnumerationValue(fieldInfo);
         marshalSimpleField(rawValue, element, enumeration, writer);
     }
@@ -106,7 +106,7 @@ public class SimpleTypeWriter {
     }
 
     private void marshalIntegerField(Object fieldInfo, Element element, SimpleType type,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
         switch (type.getRepresentation()) {
             case BINARY:
                 writeIntegerValueAsBinary(type, fieldInfo, writer);
@@ -120,7 +120,7 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void marshalTextField(Object fieldInfo, Element element, BitStreamWriter writer)
+    private void marshalTextField(Object fieldInfo, Element element, OutputStreamBitStreamWriter writer)
         throws IOException {
         if (fieldInfo instanceof String) {
             String text = (String) fieldInfo;
@@ -133,7 +133,7 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void marshalOpaqueField(Object fieldInfo, Element element, BitStreamWriter writer)
+    private void marshalOpaqueField(Object fieldInfo, Element element, OutputStreamBitStreamWriter writer)
         throws IOException {
         if (fieldInfo instanceof byte[]) {
             byte[] bytes = (byte[]) fieldInfo;
@@ -145,7 +145,7 @@ public class SimpleTypeWriter {
         }
     }
 
-    void writeIntegerValueAsBinary(SimpleType type, Object info, BitStreamWriter writer)
+    void writeIntegerValueAsBinary(SimpleType type, Object info, OutputStreamBitStreamWriter writer)
         throws IOException {
         switch (type.getBinaryNumberRep()) {
             case BINARY:
@@ -161,7 +161,7 @@ public class SimpleTypeWriter {
     }
 
     private void writeIntegerValueAsStandardBinary(SimpleType type, Object info,
-        BitStreamWriter writer) throws IOException {
+        OutputStreamBitStreamWriter writer) throws IOException {
 
         evaluator.setSelf(info);
         if (context.writeValueViaAdapter(type, info, writer)) {
@@ -179,7 +179,7 @@ public class SimpleTypeWriter {
         writer.writeBits(value, (int) numBits);
     }
 
-    private void writeIntegerValueAsBcdBinary(SimpleType type, Object info, BitStreamWriter writer)
+    private void writeIntegerValueAsBcdBinary(SimpleType type, Object info, OutputStreamBitStreamWriter writer)
         throws IOException {
         evaluator.setSelf(info);
         if (context.writeValueViaAdapter(type, info, writer)) {
@@ -211,7 +211,7 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void writeIntegerValueAsText(DadlType type, Object info, BitStreamWriter writer)
+    private void writeIntegerValueAsText(DadlType type, Object info, OutputStreamBitStreamWriter writer)
         throws IOException {
         evaluator.setSelf(info);
         if (context.writeValueViaAdapter(type, info, writer)) {
@@ -231,7 +231,7 @@ public class SimpleTypeWriter {
     }
 
     private void writeTextWithPadding(String s, int numBytes, Justification justification,
-        String padCharacter, BitStreamWriter writer) throws IOException {
+        String padCharacter, OutputStreamBitStreamWriter writer) throws IOException {
         int totalPadding = numBytes - s.length();
         int leftPadding = totalPadding;
         int rightPadding = totalPadding;
