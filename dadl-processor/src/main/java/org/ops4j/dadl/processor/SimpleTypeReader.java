@@ -17,6 +17,8 @@
  */
 package org.ops4j.dadl.processor;
 
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -128,7 +130,7 @@ public class SimpleTypeReader {
         BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         long value;
         if (simpleType.isUnsigned()) {
@@ -144,7 +146,7 @@ public class SimpleTypeReader {
         BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         if (numBits % 4 != 0) {
             throw new UnmarshalException("BCD bit length must be divisible by 4");

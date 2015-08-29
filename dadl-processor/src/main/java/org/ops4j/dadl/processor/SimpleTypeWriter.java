@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package org.ops4j.dadl.processor;
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
 
 import java.io.IOException;
 
@@ -174,7 +175,7 @@ public class SimpleTypeWriter {
 
         long numBits = evaluator.computeLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         writer.writeBits(value, (int) numBits);
     }
@@ -192,7 +193,7 @@ public class SimpleTypeWriter {
 
         long numBits = evaluator.computeLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         if (numBits % 4 != 0) {
             throw new UnmarshalException("BCD bit length must be divisible by 4");

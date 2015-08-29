@@ -17,6 +17,11 @@
  */
 package org.ops4j.dadl.io;
 
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.INT_SIZE;
+import static org.ops4j.dadl.io.Constants.LONG_SIZE;
+import static org.ops4j.dadl.io.Constants.SHORT_SIZE;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -40,13 +45,13 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
 
     @Override
     public long getBitPosition() {
-        return 8 * streamPos + bitOffset;
+        return BYTE_SIZE * streamPos + bitOffset;
     }
 
     @Override
     public void setBitPosition(long pos) throws IOException {
-        int newBitOffset = (int) (pos % 8);
-        long newBytePos = pos / 8;
+        int newBitOffset = (int) (pos % BYTE_SIZE);
+        long newBytePos = pos / BYTE_SIZE;
         seek(newBytePos);
         if (newBitOffset != 0) {
             setBitOffset(newBitOffset);
@@ -60,7 +65,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readByte();
         }
         else {
-            result = (byte) readBits(8);
+            result = (byte) readBits(BYTE_SIZE);
         }
         return result;
     }
@@ -72,7 +77,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readUnsignedByte();
         }
         else {
-            result = (int) (readBits(8) & 0xFF);
+            result = (int) (readBits(BYTE_SIZE) & 0xFF);
         }
         return result;
     }
@@ -84,7 +89,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readShort();
         }
         else {
-            result = (short) readBits(16);
+            result = (short) readBits(SHORT_SIZE);
         }
         return result;
     }
@@ -96,7 +101,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readUnsignedShort();
         }
         else {
-            result = (int) (readBits(16) & 0xFFFF);
+            result = (int) (readBits(SHORT_SIZE) & 0xFFFF);
         }
         return result;
     }
@@ -108,7 +113,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readInt();
         }
         else {
-            result = (int) readBits(32);
+            result = (int) readBits(INT_SIZE);
         }
         return result;
     }
@@ -120,7 +125,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readUnsignedInt();
         }
         else {
-            result = readBits(32);
+            result = readBits(INT_SIZE);
         }
         return result;
     }
@@ -132,7 +137,7 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
             result = super.readLong();
         }
         else {
-            result = readBits(64);
+            result = readBits(LONG_SIZE);
         }
         return result;
     }
@@ -141,21 +146,21 @@ public abstract class AbstractBitStreamReader extends ImageInputStreamImpl imple
     public BigInteger readBigInteger(int numBits) throws IOException {
         BigInteger result = BigInteger.ZERO;
         int toBeRead = numBits;
-        if (toBeRead > 8) {
+        if (toBeRead > BYTE_SIZE) {
             if (bitOffset != 0) {
-                int prefixLength = 8 - bitOffset;
+                int prefixLength = BYTE_SIZE - bitOffset;
                 long mostSignificantBits = readBits(prefixLength);
                 result = BigInteger.valueOf(mostSignificantBits);
                 toBeRead -= prefixLength;
             }
 
-            int numBytes = toBeRead / 8;
+            int numBytes = toBeRead / BYTE_SIZE;
             byte[] b = new byte[numBytes];
             readFully(b);
             BigInteger i = new BigInteger(1, b);
-            result = result.shiftLeft(8 * numBytes);
+            result = result.shiftLeft(BYTE_SIZE * numBytes);
             result = result.or(i);
-            toBeRead %= 8;
+            toBeRead %= BYTE_SIZE;
         }
         if (toBeRead > 0) {
             long value = readBits(toBeRead);

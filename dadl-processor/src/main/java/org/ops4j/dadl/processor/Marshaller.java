@@ -17,6 +17,8 @@
  */
 package org.ops4j.dadl.processor;
 
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -116,7 +118,7 @@ public class Marshaller {
         long numBits = hasExactLength ? evaluator.computeLength(type) : evaluator
             .computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         long actualNumBits = writer.getBitPosition() - startPos;
         if (actualNumBits == numBits) {
@@ -130,10 +132,10 @@ public class Marshaller {
                 + " exceeds explicit length of " + numBits + " bits");
         }
         long paddingBits = numBits - actualNumBits;
-        if (paddingBits % 8 != 0) {
+        if (paddingBits % BYTE_SIZE != 0) {
             throw new UnmarshalException("number of padding bits must be divisible by 8");
         }
-        long paddingBytes = paddingBits / 8;
+        long paddingBytes = paddingBits / BYTE_SIZE;
         int fillByte = 0;
         if (type.getFillByte() != null) {
             fillByte = type.getFillByte();
@@ -204,7 +206,8 @@ public class Marshaller {
         DadlType type = model.getType(lengthField.getType());
         if (type instanceof SimpleType) {
             SimpleType simpleType = (SimpleType) type;
-            simpleTypeWriter.writeIntegerValueAsBinary(simpleType, numPayloadBits / 8, writer);
+            simpleTypeWriter.writeIntegerValueAsBinary(simpleType, numPayloadBits / BYTE_SIZE,
+                writer);
         }
         else {
             throw new UnmarshalException("length field must have simple type");
@@ -248,7 +251,7 @@ public class Marshaller {
             SimpleType simpleType = (SimpleType) type;
             long numBits = evaluator.computeLength(simpleType);
             if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-                numBits *= 8;
+                numBits *= BYTE_SIZE;
             }
             long tagValue = getExpectedValue(tag);
             writer.writeBits(tagValue, (int) numBits);

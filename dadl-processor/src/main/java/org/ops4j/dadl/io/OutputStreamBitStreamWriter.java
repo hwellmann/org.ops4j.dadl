@@ -17,6 +17,11 @@
  */
 package org.ops4j.dadl.io;
 
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.INT_SIZE;
+import static org.ops4j.dadl.io.Constants.LONG_SIZE;
+import static org.ops4j.dadl.io.Constants.SHORT_SIZE;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
@@ -48,13 +53,13 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
 
     @Override
     public long getBitPosition() {
-        return 8 * streamPos + bitOffset;
+        return BYTE_SIZE * streamPos + bitOffset;
     }
 
     @Override
     public void setBitPosition(long pos) throws IOException {
-        int newBitOffset = (int) (pos % 8);
-        long newBytePos = pos / 8;
+        int newBitOffset = (int) (pos % BYTE_SIZE);
+        long newBytePos = pos / BYTE_SIZE;
         seek(newBytePos);
         if (newBitOffset != 0) {
             setBitOffset(newBitOffset);
@@ -67,7 +72,7 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
             super.writeByte(value);
         }
         else {
-            writeBits(value, 8);
+            writeBits(value, BYTE_SIZE);
         }
     }
 
@@ -78,7 +83,7 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
         }
         else {
             for (int i = 0; i < value.length(); i++) {
-                writeBits(value.charAt(i), 8);
+                writeBits(value.charAt(i), BYTE_SIZE);
             }
         }
     }
@@ -89,7 +94,7 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
             super.writeShort(value);
         }
         else {
-            writeBits(value, 16);
+            writeBits(value, SHORT_SIZE);
         }
     }
 
@@ -99,13 +104,13 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
             super.writeInt(value);
         }
         else {
-            writeBits(value, 32);
+            writeBits(value, INT_SIZE);
         }
     }
 
     @Override
     public void writeUnsignedInt(long value) throws IOException {
-        writeBits(value, 32);
+        writeBits(value, INT_SIZE);
     }
 
     @Override
@@ -114,36 +119,36 @@ public class OutputStreamBitStreamWriter extends MemoryCacheImageOutputStream im
             super.writeLong(value);
         }
         else {
-            writeBits(value, 64);
+            writeBits(value, LONG_SIZE);
         }
     }
 
     @Override
     public void byteAlign() throws IOException {
         if (bitOffset != 0) {
-            writeBits(0, 8 - bitOffset);
+            writeBits(0, BYTE_SIZE - bitOffset);
         }
     }
 
     private void writeBitfield(BigInteger value, int numBits) throws IOException {
-        if (numBits >= 64) {
+        if (numBits >= LONG_SIZE) {
             long val = value.longValue();
-            writeBitfield(value.shiftRight(64), numBits - 64);
+            writeBitfield(value.shiftRight(LONG_SIZE), numBits - LONG_SIZE);
             writeLong(val);
         }
-        else if (numBits >= 32) {
+        else if (numBits >= INT_SIZE) {
             int val = value.intValue();
-            writeBitfield(value.shiftRight(32), numBits - 32);
+            writeBitfield(value.shiftRight(INT_SIZE), numBits - INT_SIZE);
             writeInt(val);
         }
-        else if (numBits >= 16) {
+        else if (numBits >= SHORT_SIZE) {
             int val = value.shortValue();
-            writeBitfield(value.shiftRight(16), numBits - 16);
+            writeBitfield(value.shiftRight(SHORT_SIZE), numBits - SHORT_SIZE);
             writeShort(val);
         }
-        else if (numBits >= 8) {
+        else if (numBits >= BYTE_SIZE) {
             int val = value.byteValue();
-            writeBitfield(value.shiftRight(8), numBits - 8);
+            writeBitfield(value.shiftRight(BYTE_SIZE), numBits - BYTE_SIZE);
             writeByte(val);
         }
         else {
