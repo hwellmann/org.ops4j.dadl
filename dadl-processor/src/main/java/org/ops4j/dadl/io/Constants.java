@@ -25,6 +25,9 @@ package org.ops4j.dadl.io;
  */
 public class Constants  {
 
+    /** Number of bits per half-byte. */
+    public static final int NIBBLE_SIZE = 4;
+
     /** Number of bits per byte. */
     public static final int BYTE_SIZE = 8;
 
@@ -36,4 +39,9 @@ public class Constants  {
 
     /** Number of bits per long. */
     public static final int LONG_SIZE = 64;
+
+    /** Hexadecimal base. */
+    public static final int HEX_BASE = 16;
+
+
 }

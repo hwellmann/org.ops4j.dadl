@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 package org.ops4j.dadl.processor;
+
 import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
 import java.io.IOException;
 
@@ -84,8 +86,6 @@ public class SimpleTypeWriter {
         Object rawValue = evaluator.getEnumerationValue(fieldInfo);
         marshalSimpleField(rawValue, element, enumeration, writer);
     }
-
-
 
     /**
      * @param fieldInfo
@@ -195,20 +195,20 @@ public class SimpleTypeWriter {
         if (type.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= BYTE_SIZE;
         }
-        if (numBits % 4 != 0) {
+        if (numBits % NIBBLE_SIZE != 0) {
             throw new UnmarshalException("BCD bit length must be divisible by 4");
         }
-        long numDigits = numBits / 4;
+        long numDigits = numBits / NIBBLE_SIZE;
         String s = Long.toString(value);
         long numPaddingDigits = numDigits - s.length();
         if (numPaddingDigits < 0) {
             throw new UnmarshalException("value too large for " + numDigits + " digits");
         }
         for (int i = 0; i < numPaddingDigits; i++) {
-            writer.writeBits(0, 4);
+            writer.writeBits(0, NIBBLE_SIZE);
         }
         for (int i = 0; i < s.length(); i++) {
-            writer.writeBits(s.charAt(i) - '0', 4);
+            writer.writeBits(s.charAt(i) - '0', NIBBLE_SIZE);
         }
     }
 

@@ -18,6 +18,7 @@
 package org.ops4j.dadl.processor;
 
 import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.HEX_BASE;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -262,7 +263,7 @@ public class Marshaller {
     }
 
     private long getExpectedValue(Tag tag) {
-        return Long.parseUnsignedLong(tag.getHexValue(), 16);
+        return Long.parseUnsignedLong(tag.getHexValue(), HEX_BASE);
     }
 
     private void marshalSequencePayload(Sequence sequence, BitStreamWriter writer)

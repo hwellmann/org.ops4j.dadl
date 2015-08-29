@@ -18,6 +18,7 @@
 package org.ops4j.dadl.processor;
 
 import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -148,14 +149,14 @@ public class SimpleTypeReader {
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= BYTE_SIZE;
         }
-        if (numBits % 4 != 0) {
+        if (numBits % NIBBLE_SIZE != 0) {
             throw new UnmarshalException("BCD bit length must be divisible by 4");
         }
-        int numDigits = numBits / 4;
+        int numDigits = numBits / NIBBLE_SIZE;
         long value = 0;
         for (int i = 0; i < numDigits; i++) {
             value *= 10;
-            long digit = reader.readBits(4);
+            long digit = reader.readBits(NIBBLE_SIZE);
             // TODO signed numbers, assume non-negative for now
             if (digit > 9) {
                 throw new UnmarshalException("illegal digit: " + digit);

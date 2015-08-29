@@ -17,6 +17,9 @@
  */
 package org.ops4j.dadl.processor;
 
+import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
+import static org.ops4j.dadl.io.Constants.HEX_BASE;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -142,7 +145,7 @@ public class Unmarshaller {
         long numBits = hasExactLength ? evaluator.computeLength(type) : evaluator
             .computeMinLength(type);
         if (type.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= 8;
+            numBits *= BYTE_SIZE;
         }
         long actualNumBits = reader.getBitPosition() - startPos;
         if (actualNumBits == numBits) {
@@ -247,7 +250,7 @@ public class Unmarshaller {
     }
 
     private long getExpectedValue(Tag tag) {
-        return Long.parseUnsignedLong(tag.getHexValue(), 16);
+        return Long.parseUnsignedLong(tag.getHexValue(), HEX_BASE);
     }
 
     private void unmarshalSequenceField(Class<?> klass, SequenceElement element,
