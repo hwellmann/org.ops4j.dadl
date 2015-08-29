@@ -24,8 +24,12 @@
     <simpleType name="VarIntLength" contentType="integer" mappedType="int" representation="binary"
         lengthKind="implicit" adapter="varint"/>
 
-    <simpleType name="String" contentType="text" mappedType="java.lang.String" lengthKind="explicit" representation="text" />
+    <simpleType name="String" contentType="text" mappedType="java.lang.String" lengthKind="explicit"
+        representation="text" />
     
+    <simpleType name="Bit" contentType="integer" mappedType="int" lengthKind="explicit"
+        representation="binary" length="1" lengthUnit="bit" unsigned="true"/>
+
     <simpleType name="Decimal4" contentType="integer" mappedType="int" representation="text"
         textNumberRep="standard" textNumberJustification="right" textNumberPadCharacter="0" 
         lengthKind="explicit" length="4"/>
@@ -159,6 +163,13 @@
     <sequence name="BcdSequence">
         <element name="i16" type="UInt16"/>
         <element name="bcd" type="Bcd"/>
+    </sequence>
+
+    <sequence name="BitField">
+        <element name="b2" type="Bit" length="2"/>
+        <element name="b3" type="Bit" length="3"/>
+        <element name="b4" type="Bit" length="4"/>
+        <element name="b7" type="Bit" length="7"/>
     </sequence>
 
 </model>

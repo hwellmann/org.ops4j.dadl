@@ -39,6 +39,7 @@ import org.ops4j.dadl.io.ByteArrayBitStreamWriter;
 
 import demo.simple.AllNumbers;
 import demo.simple.BcdSequence;
+import demo.simple.BitField;
 import demo.simple.ChoiceWithDiscriminator;
 import demo.simple.Colour;
 import demo.simple.DecimalNumbers;
@@ -508,5 +509,45 @@ public class AllNumbersTest {
         assertThat(seqMinLength.getSuffix(), is(99));
     }
 
+
+    @Test
+    public void shouldMarshalBitField() throws Exception {
+        BitField bitField = new BitField();
+        bitField.setB2(3);
+        bitField.setB3(6);
+        bitField.setB4(11);
+        bitField.setB7(125);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(bitField, os);
+        assertThat(os.toByteArray().length, is(2));
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readBits(2), is(3L));
+        assertThat(reader.readBits(3), is(6L));
+        assertThat(reader.readBits(4), is(11L));
+        assertThat(reader.readBits(7), is(125L));
+        reader.close();
+    }
+
+    @Test
+    public void shouldUnmarshalBitField() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeBits(3, 2);
+        writer.writeBits(6, 3);
+        writer.writeBits(11, 4);
+        writer.writeBits(125, 7);
+        writer.close();
+
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(2));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        BitField bitField = unmarshaller.unmarshal(bytes, BitField.class);
+        assertThat(bitField.getB2(), is(3));
+        assertThat(bitField.getB3(), is(6));
+        assertThat(bitField.getB4(), is(11));
+        assertThat(bitField.getB7(), is(125));
+    }
 
 }

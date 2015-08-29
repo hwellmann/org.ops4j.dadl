@@ -28,6 +28,7 @@ import javax.xml.bind.JAXBException;
 import org.ops4j.dadl.exc.DadlException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.BitStreamWriter;
+import org.ops4j.dadl.metamodel.gen.BinaryNumberRepresentation;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
@@ -147,6 +148,8 @@ public class DadlContext {
         }
     }
 
-
-
+    BinaryNumberRepresentation getBinaryNumberRep(DadlType simpleType) {
+        return simpleType.getBinaryNumberRep() == null
+            ? BinaryNumberRepresentation.BINARY : simpleType.getBinaryNumberRep();
+    }
 }

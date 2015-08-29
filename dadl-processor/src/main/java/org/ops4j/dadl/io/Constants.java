@@ -47,4 +47,7 @@ public class Constants  {
     public static final int HEX_BASE = 16;
 
 
+    private Constants() {
+        // hidden utility class constructor
+    }
 }

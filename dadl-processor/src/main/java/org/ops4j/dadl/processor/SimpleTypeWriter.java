@@ -110,7 +110,7 @@ public class SimpleTypeWriter {
         BitStreamWriter writer) throws IOException {
         switch (type.getRepresentation()) {
             case BINARY:
-                writeIntegerValueAsBinary(type, fieldInfo, writer);
+                writeIntegerValueAsBinary(element, fieldInfo, writer);
                 break;
             case TEXT:
                 writeIntegerValueAsText(element, fieldInfo, writer);
@@ -146,9 +146,9 @@ public class SimpleTypeWriter {
         }
     }
 
-    void writeIntegerValueAsBinary(SimpleType type, Object info, BitStreamWriter writer)
+    void writeIntegerValueAsBinary(DadlType type, Object info, BitStreamWriter writer)
         throws IOException {
-        switch (type.getBinaryNumberRep()) {
+        switch (context.getBinaryNumberRep(type)) {
             case BINARY:
                 writeIntegerValueAsStandardBinary(type, info, writer);
                 break;
@@ -161,7 +161,7 @@ public class SimpleTypeWriter {
         }
     }
 
-    private void writeIntegerValueAsStandardBinary(SimpleType type, Object info,
+    private void writeIntegerValueAsStandardBinary(DadlType type, Object info,
         BitStreamWriter writer) throws IOException {
 
         evaluator.setSelf(info);
@@ -180,7 +180,7 @@ public class SimpleTypeWriter {
         writer.writeBits(value, (int) numBits);
     }
 
-    private void writeIntegerValueAsBcdBinary(SimpleType type, Object info, BitStreamWriter writer)
+    private void writeIntegerValueAsBcdBinary(DadlType type, Object info, BitStreamWriter writer)
         throws IOException {
         evaluator.setSelf(info);
         if (context.writeValueViaAdapter(type, info, writer)) {

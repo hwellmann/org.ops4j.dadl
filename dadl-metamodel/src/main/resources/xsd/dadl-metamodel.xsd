@@ -21,6 +21,7 @@
         <xs:attribute name="name" type="xs:NCName" use="required" />
         <xs:attribute name="type" type="xs:NCName" />
         <xs:attribute name="adapter" type="xs:NCName" />
+        <xs:attribute name="unsigned" type="xs:boolean" />
         <xs:attribute name="lengthUnit" type="LengthUnit" />
         <xs:attribute name="lengthKind" type="LengthKind" />
         <xs:attribute name="length" type="xs:string" />
@@ -32,7 +33,7 @@
     </xs:complexType>
 
     <xs:attributeGroup name="BinaryRepresentationAttributes">
-        <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation" default="binary"/>
+        <xs:attribute name="binaryNumberRep" type="BinaryNumberRepresentation"/>
         <xs:attribute name="byteOrder" type="ByteOrder" default="bigEndian"/>
         <xs:attribute name="bitOrder" type="BitOrder" default="mostSignificantBitFirst"/>
         <xs:attribute name="fillByte" type="xs:int" />
@@ -61,7 +62,6 @@
             <xs:extension base="DadlType">
                 <xs:attribute name="contentType" type="ContentType" use="required" />
                 <xs:attribute name="mappedType" type="xs:string" use="required" />
-                <xs:attribute name="unsigned" type="xs:boolean" default="false" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

@@ -164,5 +164,11 @@ class TypeCheckingVisitor extends BaseVisitor {
         if (derived.getLengthUnit() == null) {
             derived.setLengthUnit(base.getLengthUnit());
         }
+        if (derived.isUnsigned() == null) {
+            derived.setUnsigned(base.isUnsigned());
+        }
+        if (derived.getBinaryNumberRep() == null) {
+            derived.setBinaryNumberRep(base.getBinaryNumberRep());
+        }
     }
 }

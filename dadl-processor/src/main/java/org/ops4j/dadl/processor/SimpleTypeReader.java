@@ -105,19 +105,20 @@ public class SimpleTypeReader {
 
     Number readIntegerValue(SimpleType simpleType, Element element, Class<?> klass,
         BitStreamReader reader) throws IOException {
+        DadlType type = (element == null) ? simpleType : element;
         switch (simpleType.getRepresentation()) {
             case BINARY:
-                return readIntegerValueAsBinary(simpleType, klass, reader);
+                return readIntegerValueAsBinary(type, klass, reader);
             case TEXT:
-                return readIntegerValueAsText(simpleType, element, klass, reader);
+                return readIntegerValueAsText(type, klass, reader);
             default:
                 throw new IllegalStateException();
         }
     }
 
-    Number readIntegerValueAsBinary(SimpleType simpleType, Class<?> klass,
+    Number readIntegerValueAsBinary(DadlType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
-        switch (simpleType.getBinaryNumberRep()) {
+        switch (context.getBinaryNumberRep(simpleType)) {
             case BINARY:
                 return readIntegerValueAsStandardBinary(simpleType, klass, reader);
             case BCD:
@@ -128,14 +129,14 @@ public class SimpleTypeReader {
         }
     }
 
-    Number readIntegerValueAsStandardBinary(SimpleType simpleType, Class<?> klass,
+    Number readIntegerValueAsStandardBinary(DadlType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
             numBits *= BYTE_SIZE;
         }
         long value;
-        if (simpleType.isUnsigned()) {
+        if (Boolean.TRUE.equals(simpleType.isUnsigned())) {
             value = reader.readBits(numBits);
         }
         else {
@@ -144,7 +145,7 @@ public class SimpleTypeReader {
         return convertLong(value, klass);
     }
 
-    Number readIntegerValueAsBcdBinary(SimpleType simpleType, Class<?> klass,
+    Number readIntegerValueAsBcdBinary(DadlType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
         int numBits = evaluator.computeLength(simpleType);
         if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
@@ -168,10 +169,10 @@ public class SimpleTypeReader {
         return convertLong(value, klass);
     }
 
-    Number readIntegerValueAsText(SimpleType type, Element element, Class<?> klass,
+    Number readIntegerValueAsText(DadlType type, Class<?> klass,
         BitStreamReader reader) throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(element);
+            long length = evaluator.computeLength(type);
             byte[] bytes = readBytes(reader, length);
             String s = new String(bytes, StandardCharsets.UTF_8);
             return convertLong(Long.parseLong(s), klass);
