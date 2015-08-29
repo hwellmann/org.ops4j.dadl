@@ -79,18 +79,33 @@ public final class Evaluator {
         processor.setValue(SELF, null);
     }
 
+    /**
+     * Pushes the given object onto the stack, and updates {@code self} to point to the top element.
+     *
+     * @param info
+     *            object to be pushed
+     */
     public void setSelf(Object info) {
         infoStack.set(0, info);
         processor.setValue(SELF, info);
     }
 
+    /**
+     * Takes a value of the given enumeration type, converts it to its Java model represenation and
+     * pushes the result onto the stack, updating {@code self}.
+     *
+     * @param info
+     *            object to be pushed
+     * @param klass
+     *            Java model class for a DADL enumeration type
+     */
     public Object setSelfEnumeration(Object info, Class<?> klass) {
         try {
             Method method = getMethod("fromValue", klass);
             processor.defineFunction("", "fromValue", method);
-            processor.setValue("info", info);
-            Object enumValue = processor.eval("fromValue(info)");
-            processor.setValue("info", enumValue);
+            processor.setValue(SELF, info);
+            Object enumValue = processor.eval("fromValue(self)");
+            processor.setValue(SELF, enumValue);
             infoStack.set(0, enumValue);
             return enumValue;
         }
@@ -99,16 +114,18 @@ public final class Evaluator {
         }
     }
 
+    /**
+     * Take a Java enumeration value and converts it to its DADL representation.
+     *
+     * @param info
+     *            value of enumeration class generated from a DADL enumeration type
+     * @return content value
+     */
     public Object getEnumerationValue(Object info) {
-        processor.setValue("info", info);
-        return processor.eval("info.value");
+        processor.setValue("$enum", info);
+        return processor.eval("$enum.value");
     }
 
-    /**
-     * @param name
-     * @param klass
-     * @return
-     */
     private Method getMethod(String name, Class<?> klass) {
         for (Method method : klass.getDeclaredMethods()) {
             if (method.getName().equals(name)) {
@@ -155,8 +172,8 @@ public final class Evaluator {
     }
 
     /**
-     * Computes the mininum length of a type by evaluating its {@code minLength} expression (which may
-     * be a literal number).
+     * Computes the mininum length of a type by evaluating its {@code minLength} expression (which
+     * may be a literal number).
      *
      * @param type
      *            type with minimum length
