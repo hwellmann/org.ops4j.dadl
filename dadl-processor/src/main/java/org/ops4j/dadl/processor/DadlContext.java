@@ -108,8 +108,6 @@ public class DadlContext {
      *
      * @param type
      *            DADL type
-     * @param klass
-     *            Java model class
      * @return adapter, or null if no adapter is defined for this type
      */
     @SuppressWarnings("unchecked")

@@ -76,7 +76,7 @@ public class JavaModelGenerator {
     /**
      * Generates Java sources from a given validated model. The classes will be written to a
      * subdirectory given output root directory, corresponding to the package name, when the
-     * {@link #generateJavaModel()} method is called. E.g. for output directory {@target} and
+     * {@link #generateJavaModel()} method is called. E.g. for output directory {@code target} and
      * package name {@code com.example.foo}, the generated files will be written to
      * {@code target/com/example/foo}. Any required directories will be created if needed.
      *

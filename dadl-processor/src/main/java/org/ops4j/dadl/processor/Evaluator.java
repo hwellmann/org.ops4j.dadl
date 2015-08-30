@@ -140,9 +140,6 @@ public final class Evaluator {
 
     /**
      * Pops the stack. The element at index 0 is removed from the {@code up} list.
-     *
-     * @param info
-     *            Java model object
      */
     public void popStack() {
         infoStack.remove(0);
