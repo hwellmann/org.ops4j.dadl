@@ -64,14 +64,23 @@ format being irrelevant as long as the intended information can be decoded.
 A *descriptive* language starts with a physical data format and maps this format to a logical
 model with encoding rules such that the encoded structures exactly match the original format.
 
-Most of the better-known data modelling languages and frameworks like XML, JSON, ASN.1, Protocol
-Buffers or Thrift are prescriptive and thus do not match our requirements.
+Most of the better-known data modelling languages and frameworks like 
+http://www.w3.org/TR/2006/REC-xml11-20060816/[XML], 
+http://json.org/[JSON], ASN.1 <<asn1>>, 
+https://developers.google.com/protocol-buffers[Protocol Buffers] or 
+https://thrift.apache.org/[Thrift] are prescriptive and thus do not match our requirements.
 
-There are some lesser-known prescriptive languages like ASN.1 ECN, FAN.1, CSN.1, DataScript and 
-DFDL that were considered as alternatives. Among these, only DFDL turns out to be a close match, 
+There are some lesser-known prescriptive languages like ASN.1 ECN <<ecn>>, 
+FAN.1 <<fan1>>, 
+http://csn1.info[CSN.1], 
+http://people.cs.vt.edu/~gback/papers/gback-datascript-gpce2002.pdf[DataScript] and 
+https://www.ogf.org/documents/GFD.207.pdf[DFDL]
+that were considered as alternatives. Among these, only DFDL turns out to be a close match, 
 supporting both binary and textual formats.
 
-Currently (August 2015), Daffodil is the only Open Source implementation of DFDL. It provides
+Currently (August 2015), 
+https://opensource.ncsa.illinois.edu/confluence/display/DFDL/Daffodil%3A+Open+Source+DFDL[Daffodil] 
+is the only Open Source implementation of DFDL. It provides
 a Java API, but is implemented in Scala, which does not match our secondary requirements and 
 rules out the option of contributing to Daffodil or creating a fork to make it fit our requirements. 
 
@@ -303,9 +312,10 @@ value is just the representation of the given element value.
 == Expressions
 
 Some representation properties that logically take a numeric value can actually take a string
-expression in Expression Language (EL) 3.0. The expression must evaluate to an integer value. DADL 
-automatically sets a number of variables to support cross-references between field of the current
-type.
+expression in 
+https://jcp.org/aboutJava/communityprocess/final/jsr341/index.html[Expression Language 3.0]. 
+The expression must evaluate to an integer value. DADL automatically sets a number of variables 
+to support cross-references between field of the current type.
 
 The `self` variable refers to the current element. If this element is a complex type, `self.foo`
 refers to the bean property `foo` of the corresponding mapped type (i.e. the Java bean class 
@@ -322,6 +332,16 @@ even fixed value for a simple type.
 
 Expressions can also be used for `length` or `occursCount` properties.
  
+
+= References
+[bibliography]
+- [[[asn1]]] ISO 8824-1 | ITU-T X.680: _Abstract Syntax Notation One (ASN.1): 
+  Specification of basic notation_.
+- [[[ecn]]] ISO 8825-3 | ITU-T X.692: _ASN.1 encoding rules: 
+Specification of Encoding Control Notation (ECN)_. 
+- [[[fan1]]] W. Gora, H. Körzdörfer: _Ein universeller Datenmonitor zur Netzdiagnose und 
+  Leistungsbewertung_. In: U. Herzog, M. Paterok (ed.): _Messung, Modellierung und Bewertung
+  von Rechnersystemen_, Springer-Verlag, 1987.
 
 // Return to normal title levels 
 :leveloffset: 0
