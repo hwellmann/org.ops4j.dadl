@@ -9,12 +9,11 @@ It is licensed under the Apache Software License 2.0 by the OPS4J community.
 
 ## Documentation
 
-* [User Manual](http://ops4j.github.io/dadl/0.1.0/)
+* [User Manual](http://ops4j.github.io/dadl/latest/)
 
 ## Build
 
-You'll need a machine with Java 8 or higher and Apache Maven 3.2.5
-or higher.
+You'll need a machine with Java 8 or higher and Apache Maven 3.2.5 or higher.
 
 Checkout:
 
@@ -29,7 +28,7 @@ Run Build:
 
 Releases go to Maven Central.
 
-DADL is incubating. There is no release yet.
+DADL is incubating. The first milestone release is *DADL 0.1.0*.
 
 ## Issue Tracking
 
