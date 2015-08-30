@@ -50,6 +50,64 @@ build process. The generated model only contains simple beans and enums. The mar
 and unmarshalling logic is not contained in the generated code, but in a DADL runtime library which
 does not depend on any given model.
 
+== Motivation
+
+The driving force behind DADL is the need to decode and generate some specific proprietary data
+formats that have no formal specifications. Hence, the main requirement for DADL is to retrofit
+a formal specification onto an existing data format. The secondary requirements are Java, Open
+Source and ease of use.
+
+Data modelling languages can be categorized as prescriptive or descriptive. A *prescriptive* language
+starts with a logical data model and defines one or more encoding schemes, with the exact encoding
+format being irrelevant as long as the intended information can be decoded.
+
+A *descriptive* language starts with a physical data format and maps this format to a logical
+model with encoding rules such that the encoded structures exactly match the original format.
+
+Most of the better-known data modelling languages and frameworks like XML, JSON, ASN.1, Protocol
+Buffers or Thrift are prescriptive and thus do not match our requirements.
+
+There are some lesser-known prescriptive languages like ASN.1 ECN, FAN.1, CSN.1, DataScript and 
+DFDL that were considered as alternatives. Among these, only DFDL turns out to be a close match, 
+supporting both binary and textual formats.
+
+Currently (August 2015), Daffodil is the only Open Source implementation of DFDL. It provides
+a Java API, but is implemented in Scala, which does not match our secondary requirements and 
+rules out the option of contributing to Daffodil or creating a fork to make it fit our requirements. 
+
+Moreover, a quick test revealed that some DFDL features required for our data formats are not yet 
+implemented in Daffodil. For some special constructs in these data formats, it is yet unclear if 
+and how they can be expressed in DFDL at all.
+
+For this reason, the DADL project was created to come up with a pragmatic solution, building
+upon concepts defined in DFDL, but not with the goal to implement the DFDL specification. While DADL
+does reuse quite a few definitions from DFDL (including most representation properties), it takes
+a different route in some central aspects, like using a custom XML schema instead of annotated
+XSD or Java Expression Language instead of XPath.
+
+DADL is a means to an end, not a goal in itself. New features will be added to DADL only when
+driven by the specific needs of a specific data format of interest to DADL contributors. 
+
+
+= Working with DADL
+
+Applications that need to produce or consume a non-standard data format can use DADL to 
+simplify this task. This requires the following steps:
+
+* Create a DADL model of your data format in XML. The model must satisfy the
+DADL XML schema `dadl-metamodel.xsd` which is contained in the `dadl-metamodel` artifact.
+
+* Generate a Java model from the DADL model, either programmatically, or using the 
+`dadl-maven-plugin`.
+
+* In your application, to produce data in the target format, build a Java object graph using the 
+generated Java model  classes, load the DADL XML model into a `DadlContext` and create a 
+`Marshaller` to serialize the root of the object graph into a `BitStreamWriter`.
+
+* Similarly, to consume data in the target format, load the DADL XML model into
+a `DadlContext` and create an `Unmarshaller` to deserialize data from a `BitStreamReader` into a
+Java object graph.
+
 = Concepts
 
 == Types and content types
@@ -121,12 +179,18 @@ Additional properties for each content type are defined in the following section
 
 The `mappedType` property defines the type to be used in the target language model.
 
+For special cases that cannot be captured by the default mapping rules, a DADL model may 
+specify named type adapters using the `adapter` property. Applications working with the DADL
+runtime shall register an adapter implementation with the corresponding name for each adapter name
+occurring in the loaded model. An adapter implements a custom marshalling and unmarshalling 
+strategy for a given type. 
+
 === Integer types
 
-Integer type can be represented as binary or as text. For Java, the `mappedType` must be one of 
+Integer types can be represented as binary or as text. For Java, the `mappedType` must be one of 
 `byte`, `short`, `int`, `long`, `Byte`, `Short`, `Integer`, `Long` or `BigInteger`.
 
-Binary representation has two more variant defined by the `binaryNumberRepresentation` property
+Binary representation has two variants defined by the `binaryNumberRepresentation` property
 with values of `binary` or `bcd`. 
 
 `binary` representation is the usual two's complement number representation, further determined by 
@@ -206,6 +270,18 @@ of the element types in the given order.
 A sequence value is a tuple of element values. The representation of the sequence value is the
 concatenation of the representations of the element values in the given order.
 
+By default, each sequence element occurs exactly once. Sequence elements can specify a minimum
+or maximum number of occurrences with the `minOccurs` and `maxOccurs` properties. The actual 
+number of occurrences can be specified using the `occursCountKind` and `occursCount` properties.
+The `occursCountKind` is either `expression` or `parsed`. 
+
+In the `expression` case, the `occursCountKind` property must be set to an expression indicating
+the actual number of occurrences.
+
+In the `parsed` case, the actual number of occurrences is determined by speculative parsing, with
+the parser backtracking to the end of the last occurence after a parse error, continuing with the
+next element of the enclosing sequence.
+
 === Tagged Sequence
 
 A *tagged sequence* is a sequence preceded by a tag and a length field. The tag has an integer
@@ -223,6 +299,28 @@ significant. The content type of a choice is the union of the content types of t
 
 A choice value is a value of exactly one of the element types. The representation of the choice
 value is just the representation of the given element value.
+ 
+== Expressions
+
+Some representation properties that logically take a numeric value can actually take a string
+expression in Expression Language (EL) 3.0. The expression must evaluate to an integer value. DADL 
+automatically sets a number of variables to support cross-references between field of the current
+type.
+
+The `self` variable refers to the current element. If this element is a complex type, `self.foo`
+refers to the bean property `foo` of the corresponding mapped type (i.e. the Java bean class 
+corresponding to the complex DADL type).
+
+The `up` list variable refers to the hierarchy of objects containing the current element. `up[0]`
+is equal to `self`. 
+
+`up[1]` is the complex type instance containing the current element. `up[2]`
+is the complex type instance (if applicable) containing `up[1]` and so on.
+
+Using the `outputValueCalc` property with an EL expression, the model can define a calculated or 
+even fixed value for a simple type.
+
+Expressions can also be used for `length` or `occursCount` properties.
  
 
 // Return to normal title levels 
