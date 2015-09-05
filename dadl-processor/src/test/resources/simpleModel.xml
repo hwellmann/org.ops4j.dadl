@@ -157,7 +157,8 @@
     <taggedSequence name="TaggedString">
         <tag type="UInt8" hexValue="0A"/>
         <lengthField type="Int8"/>
-        <element name="text" type="String" length="$length" encoding="ISO-8859-15"/>
+        <element name="nwc" type="NumberWithColour"/>
+        <element name="text" type="String" length="$length - 2" encoding="ISO-8859-15"/>
     </taggedSequence>
 
     <sequence name="BcdSequence">

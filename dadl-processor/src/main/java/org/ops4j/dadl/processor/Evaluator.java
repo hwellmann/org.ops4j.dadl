@@ -50,12 +50,14 @@ public final class Evaluator {
 
     private List<Object> infoStack;
     private ELProcessor processor;
+    private List<ELProcessor> processorStack;
 
     /**
      * Creates an empty evaluator. {@code self} is undefined an {@code up} is empty.
      */
     public Evaluator() {
         this.infoStack = new ArrayList<>();
+        this.processorStack = new ArrayList<>();
         this.processor = new ELProcessor();
         processor.setValue(UP, infoStack);
         pushStack();
@@ -71,6 +73,7 @@ public final class Evaluator {
     public void pushStack(Object info) {
         infoStack.add(0, info);
         processor.setValue(SELF, info);
+        processorStack.add(0, processor);
     }
 
     /**
@@ -79,6 +82,7 @@ public final class Evaluator {
     public void pushStack() {
         infoStack.add(0, null);
         processor.setValue(SELF, null);
+        processorStack.add(0, processor);
     }
 
     /**
@@ -143,7 +147,9 @@ public final class Evaluator {
      */
     public void popStack() {
         infoStack.remove(0);
+        processorStack.remove(0);
         if (!infoStack.isEmpty()) {
+            processor = processorStack.get(0);
             processor.setValue(SELF, infoStack.get(0));
         }
     }

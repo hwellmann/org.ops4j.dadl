@@ -181,7 +181,6 @@ public class Unmarshaller {
             }
         }
         finally {
-            evaluator.clearVariable("$length");
             evaluator.popStack();
         }
         return info;
@@ -206,7 +205,6 @@ public class Unmarshaller {
             }
         }
         finally {
-            evaluator.clearVariable("$length");
             evaluator.popStack();
         }
         return info;

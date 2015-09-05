@@ -398,11 +398,13 @@ public class AllNumbersTest {
         ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
         String text = "Hello DADL!";
         writer.writeByte(0x0A);
-        writer.writeByte(text.length());
+        writer.writeByte(2 + text.length());
+        writer.writeByte(22);
+        writer.writeByte(14);
         writer.writeBytes(text);
         writer.close();
         byte[] bytes = writer.toByteArray();
-        assertThat(bytes.length, is(13));
+        assertThat(bytes.length, is(15));
 
         Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
         TaggedString taggedString = unmarshaller.unmarshal(bytes, TaggedString.class);
