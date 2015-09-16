@@ -101,7 +101,7 @@
         <element name="items" type="Int32" occursCountKind="expression" occursCount="up[1].numItems"/>
     </sequence>
     
-    <sequence name="SeqMinLength" minLength="20" lengthUnit="byte">
+    <sequence name="SeqMinLength" minLength="20" lengthUnit="byte" fillByte="0">
         <element name="numberList" type="NumberList"/>
     </sequence>    
 
@@ -133,6 +133,11 @@
         <element name="opt1" type="Option1" />
         <element name="opt2" type="Option2" />
     </choice>
+    
+    <sequence name="SequenceWithOptional">
+        <element name="opt1" type="Option1" minOccurs="0" occursCountKind="parsed" />
+        <element name="opt2" type="Option2" />
+    </sequence>
     
     <choice name="ChoiceWithDiscriminator">
         <element name="opt3" type="Option3" />

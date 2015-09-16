@@ -1,19 +1,17 @@
 /*
  * Copyright 2015 OPS4J Contributors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied.
  *
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the License for the specific language governing permissions and limitations under the
+ * License.
  */
 package org.ops4j.dadl.processor;
 
@@ -54,9 +52,9 @@ import demo.simple.PaddedOuter;
 import demo.simple.ParsedNumberList;
 import demo.simple.SeqMinLength;
 import demo.simple.SeqMinLengthSuffix;
+import demo.simple.SequenceWithOptional;
 import demo.simple.ShortNumbers;
 import demo.simple.TaggedString;
-
 
 /**
  * @author hwellmann
@@ -145,7 +143,7 @@ public class AllNumbersTest {
     }
 
     @Test
-    public void shouldUnmarshalChoice() throws Exception{
+    public void shouldUnmarshalChoice() throws Exception {
         ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
         writer.writeBits(0x0B, 8);
         writer.writeBits(7, 8);
@@ -166,6 +164,27 @@ public class AllNumbersTest {
     }
 
     @Test
+    public void shouldUnmarshallSequenceWithOptionalElements() throws IOException {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeBits(0x0B, 8);
+        writer.writeBits(7, 8);
+        writer.writeBits(42, 24);
+        writer.writeBits(12345678, 32);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(9));
+
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+
+        SequenceWithOptional choice = parser.unmarshal(bytes, SequenceWithOptional.class);
+        assertThat(choice, is(notNullValue()));
+        assertThat(choice.getOpt1(), is(nullValue()));
+        assertThat(choice.getOpt2(), is(notNullValue()));
+        assertThat(choice.getOpt2().getI21(), is(42));
+        assertThat(choice.getOpt2().getI22(), is(12345678));
+    }
+
+    @Test
     public void shouldMarshalChoice() throws Exception {
         Option2 opt2 = new Option2();
         opt2.setI21(42);
@@ -178,7 +197,7 @@ public class AllNumbersTest {
         marshaller.marshal(myChoice, os);
 
         ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
-        assertThat(reader.readUnsignedByte(), is (0x0B));
+        assertThat(reader.readUnsignedByte(), is(0x0B));
         assertThat(reader.readUnsignedByte(), is(7));
         assertThat(reader.readBits(24), is(42L));
         assertThat(reader.readBits(32), is(12345678L));
@@ -273,7 +292,8 @@ public class AllNumbersTest {
         assertThat(bytes.length, is(16));
 
         Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
-        ParsedNumberList numberList = unmarshaller.unmarshal(writer.toByteArray(), ParsedNumberList.class);
+        ParsedNumberList numberList = unmarshaller.unmarshal(writer.toByteArray(),
+            ParsedNumberList.class);
         assertThat(numberList.getItems(), contains(16, 25, 36, 49));
     }
 
@@ -510,7 +530,6 @@ public class AllNumbersTest {
         assertThat(list.getItems().get(1), is(39));
         assertThat(seqMinLength.getSuffix(), is(99));
     }
-
 
     @Test
     public void shouldMarshalBitField() throws Exception {

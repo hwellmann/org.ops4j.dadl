@@ -188,7 +188,7 @@ public class Unmarshaller {
 
     private <T> T unmarshalTaggedSequence(T info, TaggedSequence sequence, Class<T> klass,
         BitStreamReader reader) throws IOException {
-        log.debug("unmarshalling sequence {}", sequence.getName());
+        log.debug("unmarshalling tagged sequence {}", sequence.getName());
         evaluator.pushStack();
         try {
             Tag tag = sequence.getTag();
@@ -261,6 +261,9 @@ public class Unmarshaller {
                 Class<?> elementClass = (Class<?>) type.getActualTypeArguments()[0];
                 unmarshalSequenceListField(elementClass, element, reader);
             }
+            else if (model.isOptional(element)) {
+                unmarshalOptionalSequenceField(field.getType(), element, reader);
+            }
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
                     reader);
@@ -270,6 +273,20 @@ public class Unmarshaller {
         }
         catch (NoSuchFieldException | SecurityException exc) {
             throw Exceptions.unchecked(exc);
+        }
+    }
+
+    private void unmarshalOptionalSequenceField(Class<?> klass, SequenceElement element,
+        BitStreamReader reader) throws IOException {
+        long startPos = reader.getBitPosition();
+        try {
+            Object fieldValue = unmarshalSequenceIndividualField(klass, element,
+                reader);
+            checkDiscriminator(element);
+            evaluator.setParentProperty(element.getName(), fieldValue);
+        }
+        catch (AssertionError | Exception exc) {
+            reader.setBitPosition(startPos);
         }
     }
 

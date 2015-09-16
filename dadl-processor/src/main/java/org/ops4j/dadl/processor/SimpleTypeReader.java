@@ -88,9 +88,11 @@ public class SimpleTypeReader {
         switch (simpleType.getContentType()) {
             case INTEGER:
                 info = readIntegerValue(simpleType, element, klass, reader);
+                log.debug("value: {}", info);
                 break;
             case TEXT:
                 info = readTextValue(simpleType, element, reader);
+                log.debug("value: {}", info);
                 break;
             case OPAQUE:
                 info = readOpaqueValue(simpleType, element, reader);
