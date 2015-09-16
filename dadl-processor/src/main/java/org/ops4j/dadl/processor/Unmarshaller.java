@@ -308,13 +308,13 @@ public class Unmarshaller {
         List<Object> list = (List<Object>) evaluator.getParentProperty(element.getName());
 
         while (true) {
+            long startPos = reader.getBitPosition();
             try {
-                reader.mark();
                 Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
                 list.add(fieldValue);
             }
             catch (AssertionError | Exception exc) {
-                reader.reset();
+                reader.setBitPosition(startPos);
                 break;
             }
         }
@@ -336,25 +336,21 @@ public class Unmarshaller {
     }
 
     private <T> T unmarshalChoice(T info, Choice choice, Class<T> klass,
-        BitStreamReader reader) {
+        BitStreamReader reader) throws IOException {
         log.debug("unmarshalling choice {}", choice.getName());
         boolean branchMatched = false;
         evaluator.pushStack();
+
+        long startPos = reader.getBitPosition();
         try {
             for (Element element : choice.getElement()) {
                 log.debug("trying branch {}", element.getName());
-                reader.mark();
                 try {
                     branchMatched = unmarshalChoiceElement(element, klass, reader);
                     break;
                 }
                 catch (AssertionError | Exception exc) {
-                    try {
-                        reader.reset();
-                    }
-                    catch (IOException exc1) {
-                        throw Exceptions.unchecked(exc1);
-                    }
+                    reader.setBitPosition(startPos);
                 }
             }
             if (!branchMatched) {
