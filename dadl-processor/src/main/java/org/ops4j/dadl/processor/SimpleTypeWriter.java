@@ -22,6 +22,8 @@ import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
 import java.io.IOException;
 
+import javax.el.PropertyNotFoundException;
+
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamWriter;
@@ -125,9 +127,15 @@ public class SimpleTypeWriter {
         throws IOException {
         if (fieldInfo instanceof String) {
             String text = (String) fieldInfo;
-            long length = evaluator.computeLength(element);
-            if (length != text.length()) {
-                throw new UnmarshalException("computed text length does not match actual length");
+            try {
+                long length = evaluator.computeLength(element);
+                if (length != text.length()) {
+                    throw new UnmarshalException(
+                        "computed text length does not match actual length");
+                }
+            }
+            catch (PropertyNotFoundException exc) {
+                log.trace("ignoring length expression with undefined variables", exc);
             }
             byte[] bytes = text.getBytes(element.getEncoding());
             writer.write(bytes, 0, bytes.length);

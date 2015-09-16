@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
@@ -429,6 +430,31 @@ public class AllNumbersTest {
         Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
         TaggedString taggedString = unmarshaller.unmarshal(bytes, TaggedString.class);
         assertThat(taggedString.getText(), is(text));
+    }
+
+    @Test
+    public void shouldMarshalTaggedString() throws Exception {
+        NumberWithColour nwc = new NumberWithColour();
+        nwc.setI1(22);
+        nwc.setC(Colour.GREEN);
+        String text = "Hello DADL!";
+        TaggedString taggedString = new TaggedString();
+        taggedString.setNwc(nwc);
+        taggedString.setText(text);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(taggedString, os);
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readByte(), is((byte)0x0A));
+        assertThat(reader.readByte(), is((byte)(2 + text.length())));
+        assertThat(reader.readByte(), is((byte) 22));
+        assertThat(reader.readByte(), is((byte) 17));
+        byte[] bytes = new byte[11];
+        reader.read(bytes);
+        assertThat(new String(bytes, StandardCharsets.UTF_8), is(text));
+        reader.close();
     }
 
     @Test
