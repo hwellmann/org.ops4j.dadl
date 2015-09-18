@@ -47,6 +47,7 @@ import demo.simple.MyChoice;
 import demo.simple.NumberList;
 import demo.simple.NumberWithColour;
 import demo.simple.OpaqueContainer;
+import demo.simple.Option1;
 import demo.simple.Option2;
 import demo.simple.PaddedInner;
 import demo.simple.PaddedOuter;
@@ -165,7 +166,7 @@ public class AllNumbersTest {
     }
 
     @Test
-    public void shouldUnmarshallSequenceWithOptionalElements() throws IOException {
+    public void shouldUnmarshalSequenceWithOptionalElements() throws IOException {
         ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
         writer.writeBits(0x0B, 8);
         writer.writeBits(7, 8);
@@ -183,6 +184,54 @@ public class AllNumbersTest {
         assertThat(choice.getOpt2(), is(notNullValue()));
         assertThat(choice.getOpt2().getI21(), is(42));
         assertThat(choice.getOpt2().getI22(), is(12345678));
+    }
+
+    @Test
+    public void shouldMarshalSequenceWithMissingOptionalElement() throws IOException {
+        Option2 opt2 = new Option2();
+        opt2.setI21(42);
+        opt2.setI22(12345678);
+        SequenceWithOptional seq = new SequenceWithOptional();
+        seq.setOpt2(opt2);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(seq, os);
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readUnsignedByte(), is(0x0B));
+        assertThat(reader.readUnsignedByte(), is(7));
+        assertThat(reader.readBits(24), is(42L));
+        assertThat(reader.readBits(32), is(12345678L));
+        reader.close();
+    }
+
+    @Test
+    public void shouldMarshalSequenceWithPresentOptionalElement() throws IOException {
+        Option1 opt1 = new Option1();
+        opt1.setI11(17);
+        opt1.setI12(22);
+        Option2 opt2 = new Option2();
+        opt2.setI21(42);
+        opt2.setI22(12345678);
+        SequenceWithOptional seq = new SequenceWithOptional();
+        seq.setOpt1(opt1);
+        seq.setOpt2(opt2);
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(seq, os);
+
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readUnsignedByte(), is(0x0A));
+        assertThat(reader.readUnsignedByte(), is(3));
+        assertThat(reader.readBits(16), is(17L));
+        assertThat(reader.readBits(8), is(22L));
+        assertThat(reader.readUnsignedByte(), is(0x0B));
+        assertThat(reader.readUnsignedByte(), is(7));
+        assertThat(reader.readBits(24), is(42L));
+        assertThat(reader.readBits(32), is(12345678L));
+        reader.close();
     }
 
     @Test
@@ -596,5 +645,4 @@ public class AllNumbersTest {
         assertThat(bitField.getB4(), is(11));
         assertThat(bitField.getB7(), is(125));
     }
-
 }

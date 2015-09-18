@@ -285,6 +285,12 @@ public class Marshaller {
         if (model.isList(element)) {
             marshalSequenceListField(element, writer);
         }
+        else if (model.isOptional(element)) {
+            Object fieldInfo = evaluator.getParentProperty(element.getName());
+            if (fieldInfo != null) {
+                marshalSequenceIndividualField(fieldInfo, element, writer);
+            }
+        }
         else {
             Object fieldInfo = evaluator.getParentProperty(element.getName());
             marshalSequenceIndividualField(fieldInfo, element, writer);
