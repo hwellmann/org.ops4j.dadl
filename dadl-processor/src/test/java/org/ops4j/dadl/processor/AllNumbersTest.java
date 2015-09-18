@@ -407,6 +407,23 @@ public class AllNumbersTest {
     }
 
     @Test
+    public void shouldUnmarshalNumberWithUndefinedColour() throws Exception {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeByte(22);
+        // not a valid Colour value
+        writer.writeByte(99);
+        writer.close();
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(2));
+
+        Unmarshaller parser = dadlContext.createUnmarshaller();
+        NumberWithColour nwc = parser.unmarshal(bytes, NumberWithColour.class);
+        assertThat(nwc, is(notNullValue()));
+        assertThat(nwc.getI1(), is(22));
+        assertThat(nwc.getC(), is(nullValue()));
+    }
+
+    @Test
     public void shouldMarshalNumberWithColour() throws Exception {
         NumberWithColour nwc = new NumberWithColour();
         nwc.setI1(99);

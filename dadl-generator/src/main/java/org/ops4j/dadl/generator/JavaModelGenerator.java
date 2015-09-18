@@ -166,8 +166,7 @@ public class JavaModelGenerator {
         JFieldRef vRef = JExpr.ref("v");
         foreachBody._if(vRef.invoke("getValue").invoke("equals").arg(valueParam))
             ._then()._return(vRef);
-        methodBody._throw(JExpr._new(codeModel.ref(IllegalArgumentException.class))
-            .arg(JExpr.lit("illegal enumeration value: ").plus(JExpr.ref(VALUE))));
+        methodBody._return(JExpr._null());
     }
 
     private void generateEnumerationConstructor(JDefinedClass klass, JType jtype) {
