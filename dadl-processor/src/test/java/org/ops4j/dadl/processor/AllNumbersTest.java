@@ -56,6 +56,8 @@ import demo.simple.SeqMinLength;
 import demo.simple.SeqMinLengthSuffix;
 import demo.simple.SequenceWithOptional;
 import demo.simple.ShortNumbers;
+import demo.simple.TaggedList;
+import demo.simple.TaggedListWithSuffix;
 import demo.simple.TaggedString;
 
 /**
@@ -661,5 +663,53 @@ public class AllNumbersTest {
         assertThat(bitField.getB3(), is(6));
         assertThat(bitField.getB4(), is(11));
         assertThat(bitField.getB7(), is(125));
+    }
+
+    @Test
+    public void shouldUnmarshalTaggedListWithSuffix() throws IOException {
+        ByteArrayBitStreamWriter writer = new ByteArrayBitStreamWriter();
+        writer.writeByte(0x8C);
+        writer.writeByte(8);
+        writer.writeShort(500);
+        writer.writeShort(600);
+        writer.writeShort(700);
+        writer.writeShort(800);
+        writer.writeInt(999);
+        writer.close();
+
+        byte[] bytes = writer.toByteArray();
+        assertThat(bytes.length, is(14));
+
+        Unmarshaller unmarshaller = dadlContext.createUnmarshaller();
+        TaggedListWithSuffix tlws = unmarshaller.unmarshal(bytes, TaggedListWithSuffix.class);
+
+        assertThat(tlws, is(notNullValue()));
+        TaggedList tl = tlws.getTaggedList();
+        assertThat(tl.getIndexes().size(), is(4));
+        assertThat(tl.getIndexes(), contains(500, 600, 700, 800));
+        assertThat(tlws.getSuffix(), is(999));
+    }
+
+    @Test
+    public void shouldMarshalTaggedListWithSuffix() throws IOException {
+        TaggedListWithSuffix tlws = new TaggedListWithSuffix();
+        TaggedList tl = new TaggedList();
+        tlws.setTaggedList(tl);
+        tlws.setSuffix(999);
+        tl.getIndexes().addAll(Arrays.asList(500, 600, 700, 800));
+
+        Marshaller marshaller = dadlContext.createMarshaller();
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        marshaller.marshal(tlws, os);
+        assertThat(os.toByteArray().length, is(14));
+        ByteArrayBitStreamReader reader = new ByteArrayBitStreamReader(os.toByteArray());
+        assertThat(reader.readBits(8), is(0x8CL));
+        assertThat(reader.readBits(8), is(8L));
+        assertThat(reader.readBits(16), is(500L));
+        assertThat(reader.readBits(16), is(600L));
+        assertThat(reader.readBits(16), is(700L));
+        assertThat(reader.readBits(16), is(800L));
+        assertThat(reader.readBits(32), is(999L));
+        reader.close();
     }
 }

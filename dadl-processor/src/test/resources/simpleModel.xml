@@ -178,4 +178,15 @@
         <element name="b7" type="Bit" length="7"/>
     </sequence>
 
+    <taggedSequence name="TaggedList">
+        <tag type="UInt8" hexValue="8C"/>
+        <lengthField type="Int8"/>
+        <element name="indexes" type="Int16" maxOccurs="9999" occursCountKind="endOfParent"/>
+    </taggedSequence>
+
+    <sequence name="TaggedListWithSuffix">
+        <element name="taggedList" type="TaggedList"/>
+        <element name="suffix" type="Int32"/>
+    </sequence>
+
 </model>

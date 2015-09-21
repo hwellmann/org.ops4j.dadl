@@ -232,6 +232,7 @@
             <xs:enumeration value="parsed" />
             <xs:enumeration value="implicit" />
             <xs:enumeration value="stopValue" />
+            <xs:enumeration value="endOfParent" />
         </xs:restriction>
     </xs:simpleType>
 

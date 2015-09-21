@@ -308,6 +308,9 @@ public class Unmarshaller {
             case PARSED:
                 unmarshalSequenceListFieldParsed(klass, element, reader);
                 break;
+            case END_OF_PARENT:
+                unmarshalSequenceListFieldEndOfParent(klass, element, reader);
+                break;
             default:
                 throw new UnsupportedOperationException(element.getOccursCountKind().toString());
 
@@ -335,6 +338,26 @@ public class Unmarshaller {
 
         while (true) {
             long startPos = reader.getBitPosition();
+            try {
+                Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
+                list.add(fieldValue);
+            }
+            catch (AssertionError | Exception exc) {
+                reader.setBitPosition(startPos);
+                break;
+            }
+        }
+    }
+
+    private void unmarshalSequenceListFieldEndOfParent(Class<?> klass, SequenceElement element,
+        BitStreamReader reader) throws IOException {
+
+        @SuppressWarnings("unchecked")
+        List<Object> list = (List<Object>) evaluator.getParentProperty(element.getName());
+
+        long end = evaluator.getEndOfParent();
+        long startPos;
+        while ((startPos = reader.getBitPosition()) < end) {
             try {
                 Object fieldValue = unmarshalSequenceIndividualField(klass, element, reader);
                 list.add(fieldValue);

@@ -214,6 +214,19 @@ public final class Evaluator {
         }
     }
 
+    public long getEndOfParent() {
+        for (ELProcessor proc : processorStack) {
+            try {
+                Long end = (Long) proc.getValue("$end", Long.class);
+                return end;
+            }
+            catch (PropertyNotFoundException exc) {
+                // ignore
+            }
+        }
+        throw new DadlException("cannot determine endOfParent");
+    }
+
     /**
      * Computes the mininum length of a type by evaluating its {@code minLength} expression (which
      * may be a literal number).
