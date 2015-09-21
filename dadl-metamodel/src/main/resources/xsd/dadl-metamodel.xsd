@@ -107,6 +107,7 @@
         <xs:restriction base="xs:NCName">
             <xs:enumeration value="implicit" />
             <xs:enumeration value="explicit" />
+            <xs:enumeration value="endOfParent" />
         </xs:restriction>
     </xs:simpleType>
 

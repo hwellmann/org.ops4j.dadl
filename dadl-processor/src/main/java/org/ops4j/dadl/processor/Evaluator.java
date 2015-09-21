@@ -24,10 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.el.ELProcessor;
+import javax.el.PropertyNotFoundException;
 
+import org.ops4j.dadl.exc.DadlException;
 import org.ops4j.dadl.exc.UnmarshalException;
+import org.ops4j.dadl.io.Constants;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Discriminator;
+import org.ops4j.dadl.metamodel.gen.LengthKind;
+import org.ops4j.dadl.metamodel.gen.LengthUnit;
 import org.ops4j.dadl.metamodel.gen.Tag;
 import org.ops4j.dadl.metamodel.gen.TestKind;
 
@@ -72,6 +77,7 @@ public final class Evaluator {
      */
     public void pushStack(Object info) {
         infoStack.add(0, info);
+        processor = new ELProcessor();
         processor.setValue(SELF, info);
         processorStack.add(0, processor);
     }
@@ -81,6 +87,8 @@ public final class Evaluator {
      */
     public void pushStack() {
         infoStack.add(0, null);
+        this.processor = new ELProcessor();
+        processor.setValue(UP, infoStack);
         processor.setValue(SELF, null);
         processorStack.add(0, processor);
     }
@@ -173,8 +181,37 @@ public final class Evaluator {
      *            type with explicit length
      * @return length
      */
-    public int computeLength(DadlType type) {
-        return (Integer) processor.getValue(type.getLength(), Integer.class);
+    public Integer computeLength(DadlType type) {
+
+        if (type.getLengthKind() == LengthKind.END_OF_PARENT) {
+            return null;
+        }
+        else {
+            return (Integer) processor.getValue(type.getLength(), Integer.class);
+        }
+    }
+
+    public int computeBitLength(DadlType type, long bitPosition) {
+
+        if (type.getLengthKind() == LengthKind.END_OF_PARENT) {
+            for (ELProcessor proc : processorStack) {
+                try {
+                    Long end = (Long) proc.getValue("$end", Long.class);
+                    return (int) (end - bitPosition);
+                }
+                catch (PropertyNotFoundException exc) {
+                    // ignore
+                }
+            }
+            throw new DadlException("cannot determine endOfParent");
+        }
+        else {
+            int length = (Integer) processor.getValue(type.getLength(), Integer.class);
+            if (type.getLengthUnit() == LengthUnit.BYTE) {
+                length *= Constants.BYTE_SIZE;
+            }
+            return length;
+        }
     }
 
     /**
@@ -258,6 +295,18 @@ public final class Evaluator {
     public void clearVariable(String variableName) {
         processor.setValue(variableName, null);
     }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getVariable(String variableName, Class<T> klass) {
+        try {
+            return (T) processor.getValue(variableName, klass);
+        }
+        catch (PropertyNotFoundException exc) {
+            return null;
+        }
+    }
+
+
 
     @Override
     public String toString() {

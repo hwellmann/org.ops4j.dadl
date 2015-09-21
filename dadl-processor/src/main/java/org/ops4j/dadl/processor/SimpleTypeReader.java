@@ -17,7 +17,6 @@
  */
 package org.ops4j.dadl.processor;
 
-import static org.ops4j.dadl.io.Constants.BYTE_SIZE;
 import static org.ops4j.dadl.io.Constants.DEC_BASE;
 import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
@@ -27,11 +26,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
+import org.ops4j.dadl.io.Constants;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Element;
 import org.ops4j.dadl.metamodel.gen.Enumeration;
 import org.ops4j.dadl.metamodel.gen.LengthKind;
-import org.ops4j.dadl.metamodel.gen.LengthUnit;
 import org.ops4j.dadl.metamodel.gen.SimpleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,10 +132,7 @@ public class SimpleTypeReader {
 
     Number readIntegerValueAsStandardBinary(DadlType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
-        int numBits = evaluator.computeLength(simpleType);
-        if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= BYTE_SIZE;
-        }
+        int numBits = evaluator.computeBitLength(simpleType, reader.getBitPosition());
         long value;
         if (Boolean.TRUE.equals(simpleType.isUnsigned())) {
             value = reader.readBits(numBits);
@@ -149,10 +145,7 @@ public class SimpleTypeReader {
 
     Number readIntegerValueAsBcdBinary(DadlType simpleType, Class<?> klass,
         BitStreamReader reader) throws IOException {
-        int numBits = evaluator.computeLength(simpleType);
-        if (simpleType.getLengthUnit() == LengthUnit.BYTE) {
-            numBits *= BYTE_SIZE;
-        }
+        int numBits = evaluator.computeBitLength(simpleType, reader.getBitPosition());
         if (numBits % NIBBLE_SIZE != 0) {
             throw new UnmarshalException("BCD bit length must be divisible by 4");
         }
@@ -174,8 +167,8 @@ public class SimpleTypeReader {
     Number readIntegerValueAsText(DadlType type, Class<?> klass,
         BitStreamReader reader) throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(type);
-            byte[] bytes = readBytes(reader, length);
+            long length = evaluator.computeBitLength(type, reader.getBitPosition());
+            byte[] bytes = readBytes(reader, length / Constants.BYTE_SIZE);
             String s = new String(bytes, StandardCharsets.UTF_8);
             return convertLong(Long.parseLong(s), klass);
         }
@@ -184,9 +177,9 @@ public class SimpleTypeReader {
 
     String readTextValue(SimpleType type, DadlType representation, BitStreamReader reader)
         throws IOException {
-        if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(representation);
-            byte[] bytes = readBytes(reader, length);
+        if (representation.getLengthKind() != LengthKind.IMPLICIT) {
+            long length = evaluator.computeBitLength(representation, reader.getBitPosition());
+            byte[] bytes = readBytes(reader, length / Constants.BYTE_SIZE);
             try {
                 return new String(bytes, representation.getEncoding());
             }
@@ -216,8 +209,8 @@ public class SimpleTypeReader {
     byte[] readOpaqueValue(SimpleType type, DadlType representation, BitStreamReader reader)
         throws IOException {
         if (type.getLengthKind() == LengthKind.EXPLICIT) {
-            long length = evaluator.computeLength(representation);
-            return readBytes(reader, length);
+            long length = evaluator.computeBitLength(representation, reader.getBitPosition());
+            return readBytes(reader, length / Constants.BYTE_SIZE);
         }
         throw new UnsupportedOperationException();
     }

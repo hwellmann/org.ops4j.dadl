@@ -22,8 +22,6 @@ import static org.ops4j.dadl.io.Constants.NIBBLE_SIZE;
 
 import java.io.IOException;
 
-import javax.el.PropertyNotFoundException;
-
 import org.ops4j.dadl.exc.MarshalException;
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamWriter;
@@ -127,29 +125,25 @@ public class SimpleTypeWriter {
         throws IOException {
         if (fieldInfo instanceof String) {
             String text = (String) fieldInfo;
-            try {
-                long length = evaluator.computeLength(element);
-                if (length != text.length()) {
-                    throw new UnmarshalException(
-                        "computed text length does not match actual length");
-                }
-            }
-            catch (PropertyNotFoundException exc) {
-                log.trace("ignoring length expression with undefined variables", exc);
-            }
+            verifyLength(element, text.length());
             byte[] bytes = text.getBytes(element.getEncoding());
             writer.write(bytes, 0, bytes.length);
         }
+    }
+
+    private void verifyLength(DadlType type, int actualLength) {
+        Integer length = evaluator.computeLength(type);
+        if (length != null && !length.equals(actualLength)) {
+            throw new MarshalException("computed length does not match actual length");
+        }
+
     }
 
     private void marshalOpaqueField(Object fieldInfo, Element element, BitStreamWriter writer)
         throws IOException {
         if (fieldInfo instanceof byte[]) {
             byte[] bytes = (byte[]) fieldInfo;
-            long length = evaluator.computeLength(element);
-            if (length != bytes.length) {
-                throw new UnmarshalException("computed length does not match actual length");
-            }
+            verifyLength(element, bytes.length);
             writer.write(bytes, 0, bytes.length);
         }
     }

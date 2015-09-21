@@ -29,6 +29,7 @@ import org.ops4j.dadl.exc.Exceptions;
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.BitStreamReader;
 import org.ops4j.dadl.io.ByteArrayBitStreamReader;
+import org.ops4j.dadl.io.Constants;
 import org.ops4j.dadl.metamodel.gen.Choice;
 import org.ops4j.dadl.metamodel.gen.DadlType;
 import org.ops4j.dadl.metamodel.gen.Discriminator;
@@ -199,6 +200,9 @@ public class Unmarshaller {
             if (lengthField != null) {
                 long length = unmarshalLengthField(lengthField, reader);
                 evaluator.setVariable("$length", length);
+                long start = reader.getBitPosition();
+                long end = start + length * Constants.BYTE_SIZE;
+                evaluator.setVariable("$end", end);
             }
             for (SequenceElement element : sequence.getElement()) {
                 unmarshalSequenceField(klass, element, reader);
@@ -254,6 +258,7 @@ public class Unmarshaller {
     private void unmarshalSequenceField(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
         log.debug("unmarshalling sequence element {}", element.getName());
+        log.debug("end = {}", evaluator.getVariable("$end", Long.class));
         try {
             Field field = klass.getDeclaredField(element.getName());
             if (model.isList(element)) {
@@ -262,7 +267,11 @@ public class Unmarshaller {
                 unmarshalSequenceListField(elementClass, element, reader);
             }
             else if (model.isOptional(element)) {
-                unmarshalOptionalSequenceField(field.getType(), element, reader);
+                Long end = evaluator.getVariable("$end", Long.class);
+                long pos = reader.getBitPosition();
+                if (end == null || pos < end) {
+                    unmarshalOptionalSequenceField(field.getType(), element, reader);
+                }
             }
             else {
                 Object fieldValue = unmarshalSequenceIndividualField(field.getType(), element,
