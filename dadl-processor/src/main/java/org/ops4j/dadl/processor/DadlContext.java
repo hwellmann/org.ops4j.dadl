@@ -1,24 +1,23 @@
 /*
  * Copyright 2015 OPS4J Contributors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied.
  *
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the License for the specific language governing permissions and limitations under the
+ * License.
  */
 package org.ops4j.dadl.processor;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,16 +60,58 @@ public class DadlContext {
      */
     public static DadlContext newInstance(File modelFile) {
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(Model.class);
-            javax.xml.bind.Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            javax.xml.bind.Unmarshaller unmarshaller = createJaxbUnmarshaller();
             Model rawModel = (Model) unmarshaller.unmarshal(modelFile);
-            ValidatedModel model = new ValidatedModel(rawModel);
-            model.validate();
-            return new DadlContext(model);
+            ValidatedModel validatedModel = validateModel(rawModel);
+            return new DadlContext(validatedModel);
         }
         catch (JAXBException exc) {
             throw new DadlException(exc);
         }
+    }
+
+    /**
+     * Creates a DADL context for a inputstream containing the XML model.
+     * 
+     * @param modelInputStream
+     *            input stream containg a XML model satisfying the DADL schema
+     * @return DADL context
+     */
+    public static DadlContext newInstance(InputStream modelInputStream) {
+        try {
+            javax.xml.bind.Unmarshaller unmarshaller = createJaxbUnmarshaller();
+            Model rawModel = (Model) unmarshaller.unmarshal(modelInputStream);
+            ValidatedModel validatedModel = validateModel(rawModel);
+            return new DadlContext(validatedModel);
+        }
+        catch (JAXBException exc) {
+            throw new DadlException(exc);
+        }
+    }
+
+    /**
+     * Validates the given unmarshalled raw model.
+     * 
+     * @param rawModel
+     *            unmarshalled raw model
+     * @return validated model
+     */
+    private static ValidatedModel validateModel(Model rawModel) {
+        ValidatedModel model = new ValidatedModel(rawModel);
+        model.validate();
+        return model;
+    }
+
+    /**
+     * Creates a new instance of the JAXB unmarshaller.
+     * 
+     * @return new instance of JAXB unmarshaller
+     * @throws JAXBException
+     *             on context initialization or unmarshaller creation exception
+     */
+    private static javax.xml.bind.Unmarshaller createJaxbUnmarshaller() throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(Model.class);
+        return jaxbContext.createUnmarshaller();
     }
 
     /**
@@ -122,7 +163,6 @@ public class DadlContext {
         }
         return (DadlAdapter<T>) adapter;
     }
-
 
     <T> T readValueViaAdapter(DadlType type, BitStreamReader reader)
         throws IOException {
