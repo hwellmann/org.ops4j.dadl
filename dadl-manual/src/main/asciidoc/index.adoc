@@ -176,10 +176,13 @@ applies to text types.
 Types with a `minLength` property will be padded to this length when their actual length is shorter
 than the `minLength` value.
 
-The `lengthKind` is either `explicit` or `implicit`. An explicit length is defined by the `length`
+The `lengthKind` is one of `explicit`, `implicit` or `endOfParent`. 
+An explicit length is defined by the `length`
 property on the given type. Simple types have explicit length. Complex types may have implicit
 length, which means that the length of the complex value is defined by the total length of its
-elements, including tags and length fields.          
+elements, including tags and length fields. The last member directly or indirectly embedded in a 
+tagged sequence may have a `lengthKind` of `endOfParent`, meaning that the length of the given
+member is derived from the remaining length of the enclosing sequence.           
 
 == Simple types
 
@@ -282,7 +285,7 @@ concatenation of the representations of the element values in the given order.
 By default, each sequence element occurs exactly once. Sequence elements can specify a minimum
 or maximum number of occurrences with the `minOccurs` and `maxOccurs` properties. The actual 
 number of occurrences can be specified using the `occursCountKind` and `occursCount` properties.
-The `occursCountKind` is either `expression` or `parsed`. 
+The `occursCountKind` is one of `expression`, `parsed` or `endOfParent`. 
 
 In the `expression` case, the `occursCountKind` property must be set to an expression indicating
 the actual number of occurrences.
@@ -290,6 +293,10 @@ the actual number of occurrences.
 In the `parsed` case, the actual number of occurrences is determined by speculative parsing, with
 the parser backtracking to the end of the last occurence after a parse error, continuing with the
 next element of the enclosing sequence.
+
+In the `endOfParent` case, parsing of element occurrences will continue until the end of the
+enclosing tagged sequence has been reached. The given element must be the last member in its
+enclosing sequences, including the tagged sequence determining the number of occurrences. 
 
 === Tagged Sequence
 
