@@ -26,11 +26,14 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.Scanner;
 import org.ops4j.dadl.generator.JavaModelGenerator;
 import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * @author hwellmann
@@ -47,19 +50,38 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
     @Parameter(readonly = true, defaultValue = "${project}")
     protected MavenProject project;
 
+    @Component
+    private BuildContext buildContext;
+
     /**
      * @throws MojoFailureException
      */
     protected void generateJavaSources() throws MojoFailureException {
-        ValidatedModel validatedModel = buildValidatedModel();
+        if (buildContext.hasDelta(model)) {
+            getLog().info("generating Java model from " + model);
+            ValidatedModel validatedModel = buildValidatedModel();
 
-        JavaModelGenerator generator = new JavaModelGenerator(validatedModel, packageName,
-            getOutputDir().toPath());
-        try {
-            generator.generateJavaModel();
+            JavaModelGenerator generator = new JavaModelGenerator(validatedModel, packageName,
+                getOutputDir().toPath());
+            try {
+                generator.generateJavaModel();
+                refreshGeneratedSources();
+            }
+            catch (IOException exc) {
+                throw new MojoFailureException("error generating Java model", exc);
+            }
         }
-        catch (IOException exc) {
-            throw new MojoFailureException("error generating Java model", exc);
+        else {
+            getLog().info("Java model is up-to-date");
+        }
+    }
+
+    private void refreshGeneratedSources() {
+        Scanner scanner = buildContext.newScanner(getOutputDir());
+        scanner.setIncludes(new String[] { "*.java" });
+        scanner.scan();
+        for (String source : scanner.getIncludedFiles()) {
+            buildContext.refresh(new File(source));
         }
     }
 
