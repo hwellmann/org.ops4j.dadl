@@ -20,13 +20,13 @@ package org.ops4j.dadl.maven;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.ops4j.dadl.generator.JavaModelGenerator;
@@ -49,7 +49,7 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
     @Parameter(readonly = true, defaultValue = "${project}")
     protected MavenProject project;
 
-    @Component
+    @Inject
     private BuildContext buildContext;
 
     /**
