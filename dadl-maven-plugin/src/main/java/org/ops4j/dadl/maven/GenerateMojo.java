@@ -25,7 +25,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-/**
+/** 
+ * Generates sources from a DADL model.
+ * 
  * @author hwellmann
  *
  */
@@ -39,8 +41,8 @@ public class GenerateMojo extends AbstractDadlMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         String outputRoot = getOutputDir().getAbsolutePath();
         getLog().info("Generating additional source directory " + outputRoot);
-        generateJavaSources();
         project.addCompileSourceRoot(outputRoot);
+        generateJavaSources();
     }
     
     @Override

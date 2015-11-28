@@ -26,6 +26,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
+ * Generates test sources from a DADL model.
+ * 
  * @author hwellmann
  *
  */
@@ -39,10 +41,10 @@ public class GenerateTestMojo extends AbstractDadlMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         String outputRoot = getOutputDir().getAbsolutePath();
         getLog().info("Generating additional test source directory " + outputRoot);
-        generateJavaSources();
         project.addTestCompileSourceRoot(outputRoot);
+        generateJavaSources();
     }
-    
+
     @Override
     public File getOutputDir() {
         return outputDir;

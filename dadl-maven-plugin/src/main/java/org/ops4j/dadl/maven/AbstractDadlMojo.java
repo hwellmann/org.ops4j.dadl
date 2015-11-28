@@ -29,7 +29,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.Scanner;
 import org.ops4j.dadl.generator.JavaModelGenerator;
 import org.ops4j.dadl.metamodel.gen.Model;
 import org.ops4j.dadl.model.ValidatedModel;
@@ -58,7 +57,7 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
      */
     protected void generateJavaSources() throws MojoFailureException {
         if (buildContext.hasDelta(model)) {
-            getLog().info("generating Java model from " + model);
+            getLog().info("Generating Java model from " + model);
             ValidatedModel validatedModel = buildValidatedModel();
 
             JavaModelGenerator generator = new JavaModelGenerator(validatedModel, packageName,
@@ -77,12 +76,8 @@ public abstract class AbstractDadlMojo extends AbstractMojo {
     }
 
     private void refreshGeneratedSources() {
-        Scanner scanner = buildContext.newScanner(getOutputDir());
-        scanner.setIncludes(new String[] { "*.java" });
-        scanner.scan();
-        for (String source : scanner.getIncludedFiles()) {
-            buildContext.refresh(new File(source));
-        }
+        getLog().debug("refreshing " + getOutputDir());
+        buildContext.refresh(getOutputDir());
     }
 
     /**
