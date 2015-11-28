@@ -28,7 +28,7 @@ Run Build:
 
 Releases go to Maven Central.
 
-DADL is incubating. The first milestone release is *DADL 0.1.0*.
+DADL is incubating. The current milestone release is *DADL 0.3.0*.
 
 ## Issue Tracking
 
