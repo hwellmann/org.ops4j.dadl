@@ -19,6 +19,8 @@ package org.ops4j.dadl.processor;
 
 import static org.ops4j.dadl.io.Constants.HEX_BASE;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ import javax.el.ELProcessor;
 import javax.el.PropertyNotFoundException;
 
 import org.ops4j.dadl.exc.DadlException;
+import org.ops4j.dadl.exc.Exceptions;
 import org.ops4j.dadl.exc.UnmarshalException;
 import org.ops4j.dadl.io.Constants;
 import org.ops4j.dadl.metamodel.gen.DadlType;
@@ -248,7 +251,39 @@ public final class Evaluator {
      *            value to be set
      */
     public void setParentProperty(String propertyName, Object value) {
-        processor.setValue("up[1]." + propertyName, value);
+        Object parent = infoStack.get(1);
+        try {
+            Field field = getField(parent, propertyName);
+            field.set(parent, value);
+        }
+        catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException exc) {
+            throw Exceptions.unchecked(exc);
+        }
+    }
+
+    private Field getField(Object parent, String propertyName) throws NoSuchFieldException {
+        Class<?> klass = parent.getClass();
+        Field field = klass.getDeclaredField(propertyName);
+        field.setAccessible(true);
+        return field;
+    }
+
+    private String getAccessorName(String prefix, String fieldName) {
+        StringBuilder buffer = new StringBuilder(prefix);
+        buffer.append(fieldName.substring(0, 1).toUpperCase());
+        buffer.append(fieldName.substring(1));
+        return buffer.toString();
+    }
+
+    private Method getGetter(Object parent, String propertyName) {
+        Class<?> klass = parent.getClass();
+        String methodName = getAccessorName("get", propertyName);
+        try {
+            return klass.getDeclaredMethod(methodName);
+        }
+        catch (NoSuchMethodException | SecurityException exc) {
+            throw Exceptions.unchecked(exc);
+        }
     }
 
     /**
@@ -259,7 +294,15 @@ public final class Evaluator {
      * @return property value
      */
     public Object getParentProperty(String propertyName) {
-        return processor.eval("up[1]." + propertyName);
+        Object parent = infoStack.get(1);
+        try {
+            Method getter = getGetter(parent, propertyName);
+            return getter.invoke(parent);
+        }
+        catch (SecurityException | IllegalArgumentException | IllegalAccessException
+            | InvocationTargetException exc) {
+            throw Exceptions.unchecked(exc);
+        }
     }
 
     /**
@@ -318,8 +361,6 @@ public final class Evaluator {
             return null;
         }
     }
-
-
 
     @Override
     public String toString() {
