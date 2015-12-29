@@ -216,13 +216,13 @@ public class SimpleTypeReader {
     }
 
     Number convertLong(long value, Class<?> klass) {
-        if (Integer.class.isAssignableFrom(klass)) {
+        if (Integer.class == klass || int.class == klass) {
             return Integer.valueOf((int) value);
         }
-        if (Short.class.isAssignableFrom(klass)) {
+        if (Short.class == klass || short.class == klass) {
             return Short.valueOf((short) value);
         }
-        if (Byte.class.isAssignableFrom(klass)) {
+        if (Byte.class == klass || byte.class == klass) {
             return Byte.valueOf((byte) value);
         }
         return value;
