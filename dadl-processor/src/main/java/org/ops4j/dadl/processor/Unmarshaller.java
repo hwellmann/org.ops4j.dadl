@@ -257,8 +257,10 @@ public class Unmarshaller {
 
     private void unmarshalSequenceField(Class<?> klass, SequenceElement element,
         BitStreamReader reader) throws IOException {
-        log.debug("unmarshalling sequence element {}", element.getName());
-        log.debug("end = {}", evaluator.getVariable("$end", Long.class));
+        if (log.isDebugEnabled()) {
+            log.debug("unmarshalling sequence element {}", element.getName());
+            log.debug("end = {}", evaluator.getVariable("$end", Long.class));
+        }
         try {
             Field field = klass.getDeclaredField(element.getName());
             if (model.isList(element)) {
